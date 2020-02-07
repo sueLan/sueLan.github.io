@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 
   
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
   
@@ -75,7 +75,10 @@
       
         <li class="nav-item" data-path="/">
           
-            <a href="/" target="_self">
+            <a 
+              href="/"
+              target="_self"
+            >
               Home
             </a>
           
@@ -83,7 +86,10 @@
       
         <li class="nav-item" data-path="/archives/">
           
-            <a href="/archives/" target="_self">
+            <a 
+              href="/archives/"
+              target="_self"
+            >
               Archives
             </a>
           
@@ -91,7 +97,10 @@
       
         <li class="nav-item" data-path="/categories/">
           
-            <a href="/categories/" target="_self">
+            <a 
+              href="/categories/"
+              target="_self"
+            >
               Categories
             </a>
           
@@ -99,7 +108,10 @@
       
         <li class="nav-item" data-path="/tags/">
           
-            <a href="/tags/" target="_self">
+            <a 
+              href="/tags/"
+              target="_self"
+            >
               Tags
             </a>
           
@@ -107,37 +119,52 @@
       
         <li class="nav-item" data-path="/about/">
           
-            <a href="/about/" target="_self">
+            <a 
+              href="/about/"
+              target="_self"
+            >
               About
             </a>
           
         </li>
       
-        <li class="nav-item" data-path>
+        <li class="nav-item" data-path="">
           
             <a href="javascript:void(0);" v-else>Me</a>
             <ul class="nav-menu--dropdown">
               
                 <li>
-                  <a href="https://github.com/sueLan" target="_blank">
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
                     Github
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.linkedin.com/in/rongyanzheng/" target="_blank">
+                  <a 
+                    href="https://www.linkedin.com/in/rongyanzheng/" 
+                    target="_blank"
+                  >
                     Linkedin
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.jianshu.com/u/23bd8d4cc8bf" target="_blank">
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
                     Jian Shu
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://yq.aliyun.com/users/gi7dnrwlx2mya" target="_blank">
+                  <a 
+                    href="https://yq.aliyun.com/users/gi7dnrwlx2mya" 
+                    target="_blank"
+                  >
                     Ali yun
                   </a>
                 </li>
@@ -232,13 +259,13 @@
 <p><strong>2D的高斯函数</strong><br>$$G(x, y) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{x^2 + y^2}{2\sigma^2}}$$</p>
 <p><img src="/img/Gaussian-Filter/2d-gaussian.png" alt="image.png"></p>
 <p><strong>所谓高斯滤波操作，其实就是用高斯函数对image做卷积计算</strong>。但一般图像在计算机中一般是离散的3D矩阵，而高斯函数是连续函数，所以我们要从连续高斯函数中采样生成离散的2D矩阵，即Gaussian Filter Kernel。 我们可以控制Kernal的size，让它的点都落在-3$\sigma$ 到+3$\sigma$区间内。</p>
-<h3 id="生成高斯kernel"><a href="#生成高斯kernel" class="headerlink" title="生成高斯kernel"></a>生成高斯kernel</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Function to create Gaussian filter; sigma is standard deviation</span></span><br><span class="line"><span class="function">Matrix <span class="title">getGaussian</span><span class="params">(<span class="keyword">int</span> height, <span class="keyword">int</span> width, <span class="keyword">double</span> sigma)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Matrix kernel(height, Array(width));</span><br><span class="line">    <span class="comment">// sum is for normalization </span></span><br><span class="line">    <span class="keyword">double</span> sum=<span class="number">0.0</span>;</span><br><span class="line">    <span class="keyword">int</span> i,j;</span><br><span class="line">    </span><br><span class="line">   <span class="comment">// generating the kernel </span></span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;height ; i++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (j=<span class="number">0</span> ; j&lt;width ; j++) &#123;</span><br><span class="line">            <span class="comment">// using gaussian function to generate gaussian filter </span></span><br><span class="line">            kernel[i][j] = <span class="built_in">exp</span>(-(i*i+j*j)/(<span class="number">2</span>*sigma*sigma))/(<span class="number">2</span>*M_PI*sigma*sigma);</span><br><span class="line">            sum += kernel[i][j];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br><span class="line">   <span class="comment">// normalising the Kernel </span></span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;height ; i++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (j=<span class="number">0</span> ; j&lt;width ; j++) &#123;</span><br><span class="line">            kernel[i][j] /= sum;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> kernel;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="生成高斯kernel"><a href="#生成高斯kernel" class="headerlink" title="生成高斯kernel"></a>生成高斯kernel</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Function to create Gaussian filter; sigma is standard deviation</span></span><br><span class="line"><span class="function">Matrix <span class="title">getGaussian</span><span class="params">(<span class="keyword">int</span> height, <span class="keyword">int</span> width, <span class="keyword">double</span> sigma)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">Matrix <span class="title">kernel</span><span class="params">(height, Array(width))</span></span>;</span><br><span class="line">    <span class="comment">// sum is for normalization </span></span><br><span class="line">    <span class="keyword">double</span> sum=<span class="number">0.0</span>;</span><br><span class="line">    <span class="keyword">int</span> i,j;</span><br><span class="line">    </span><br><span class="line">   <span class="comment">// generating the kernel </span></span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;height ; i++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (j=<span class="number">0</span> ; j&lt;width ; j++) &#123;</span><br><span class="line">            <span class="comment">// using gaussian function to generate gaussian filter </span></span><br><span class="line">            kernel[i][j] = <span class="built_in">exp</span>(-(i*i+j*j)/(<span class="number">2</span>*sigma*sigma))/(<span class="number">2</span>*M_PI*sigma*sigma);</span><br><span class="line">            sum += kernel[i][j];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br><span class="line">   <span class="comment">// normalising the Kernel </span></span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;height ; i++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (j=<span class="number">0</span> ; j&lt;width ; j++) &#123;</span><br><span class="line">            kernel[i][j] /= sum;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> kernel;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><a href="https://gist.github.com/OmarAflak/aca9d0dc8d583ff5a5dc16ca5cdda86a" target="_blank" rel="noopener">代码来源</a><br>比如，我们用高斯函数生成了一个5x5， $\sigma$是1的高斯核2D矩阵:<br><img src="/img/Gaussian-Filter/gaussian_matrix.png" alt="image.png"><br>它有几个特点： </p>
 <ol>
 <li>最中间的值最大，值向周围递减</li>
 <li>$\sigma$越大，高斯函数的峰越宽，临接的数值差越大</li>
 </ol>
-<h3 id="对图片应用高斯Filter"><a href="#对图片应用高斯Filter" class="headerlink" title="对图片应用高斯Filter"></a>对图片应用高斯Filter</h3><p>对某个像素点image[i][j]，Fitler对原图对应的像素点做点乘，相加。 生成新的值。<br><img src="/img/Gaussian-Filter/convoltion.gif" alt="https://www.youtube.com/watch?v=C_zFhWdM4ic"><br><a href="https://www.youtube.com/watch?v=C_zFhWdM4ic" target="_blank" rel="noopener">材料来源</a><br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Image <span class="title">applyFilter</span><span class="params">(Image &amp;image, Matrix &amp;filter)</span></span>&#123;</span><br><span class="line">    assert(image.size()==<span class="number">3</span> &amp;&amp; filter.size()!=<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> height = image[<span class="number">0</span>].size();</span><br><span class="line">    <span class="keyword">int</span> width = image[<span class="number">0</span>][<span class="number">0</span>].size();</span><br><span class="line">    <span class="keyword">int</span> filterHeight = filter.size();</span><br><span class="line">    <span class="keyword">int</span> filterWidth = filter[<span class="number">0</span>].size();</span><br><span class="line">    <span class="keyword">int</span> newImageHeight = height-filterHeight+<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> newImageWidth = width-filterWidth+<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> d,i,j,h,w;</span><br><span class="line"></span><br><span class="line">    Image newImage(3, Matrix(newImageHeight, Array(newImageWidth)));</span><br><span class="line">    </span><br><span class="line">   <span class="comment">// iter the image pixel</span></span><br><span class="line">    <span class="keyword">for</span> (d=<span class="number">0</span> ; d&lt;<span class="number">3</span> ; d++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;newImageHeight ; i++) &#123;</span><br><span class="line">            <span class="keyword">for</span> (j=<span class="number">0</span> ; j&lt;newImageWidth ; j++) &#123;</span><br><span class="line">                <span class="comment">// using filter convolute the image matrix</span></span><br><span class="line">                <span class="keyword">for</span> (h=i ; h&lt;i+filterHeight ; h++) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (w=j ; w&lt;j+filterWidth ; w++) &#123;</span><br><span class="line">                        newImage[d][i][j] += filter[h-i][w-j]*image[d][h][w];</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> newImage;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="对图片应用高斯Filter"><a href="#对图片应用高斯Filter" class="headerlink" title="对图片应用高斯Filter"></a>对图片应用高斯Filter</h3><p>对某个像素点image[i][j]，Fitler对原图对应的像素点做点乘，相加。 生成新的值。<br><img src="/img/Gaussian-Filter/convoltion.gif" alt="https://www.youtube.com/watch?v=C_zFhWdM4ic"><br><a href="https://www.youtube.com/watch?v=C_zFhWdM4ic" target="_blank" rel="noopener">材料来源</a><br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Image <span class="title">applyFilter</span><span class="params">(Image &amp;image, Matrix &amp;filter)</span></span>&#123;</span><br><span class="line">    assert(image.size()==<span class="number">3</span> &amp;&amp; filter.size()!=<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> height = image[<span class="number">0</span>].size();</span><br><span class="line">    <span class="keyword">int</span> width = image[<span class="number">0</span>][<span class="number">0</span>].size();</span><br><span class="line">    <span class="keyword">int</span> filterHeight = filter.size();</span><br><span class="line">    <span class="keyword">int</span> filterWidth = filter[<span class="number">0</span>].size();</span><br><span class="line">    <span class="keyword">int</span> newImageHeight = height-filterHeight+<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> newImageWidth = width-filterWidth+<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> d,i,j,h,w;</span><br><span class="line"></span><br><span class="line">    <span class="function">Image <span class="title">newImage</span><span class="params">(<span class="number">3</span>, Matrix(newImageHeight, Array(newImageWidth)))</span></span>;</span><br><span class="line">    </span><br><span class="line">   <span class="comment">// iter the image pixel</span></span><br><span class="line">    <span class="keyword">for</span> (d=<span class="number">0</span> ; d&lt;<span class="number">3</span> ; d++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;newImageHeight ; i++) &#123;</span><br><span class="line">            <span class="keyword">for</span> (j=<span class="number">0</span> ; j&lt;newImageWidth ; j++) &#123;</span><br><span class="line">                <span class="comment">// using filter convolute the image matrix</span></span><br><span class="line">                <span class="keyword">for</span> (h=i ; h&lt;i+filterHeight ; h++) &#123;</span><br><span class="line">                    <span class="keyword">for</span> (w=j ; w&lt;j+filterWidth ; w++) &#123;</span><br><span class="line">                        newImage[d][i][j] += filter[h-i][w-j]*image[d][h][w];</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> newImage;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>如下图，图片被平滑处理了。<br><img src="/img/Gaussian-Filter/blur_image.png" alt="image.png"></p>
 <h4 id="More"><a href="#More" class="headerlink" title="More:"></a>More:</h4><p><a href="https://gist.github.com/OmarAflak/aca9d0dc8d583ff5a5dc16ca5cdda86a" target="_blank" rel="noopener">https://gist.github.com/OmarAflak/aca9d0dc8d583ff5a5dc16ca5cdda86a</a></p>
 
@@ -250,9 +277,9 @@
         <blockquote>
         
         
-          Author : RY Zheng <br>
+          Author : RY Zheng <br/>
         
-        Link : <a href>https://suelan.github.io/2019/07/12/Gaussian-Filter/</a><br>
+        Link : <a href="">https://suelan.github.io/2019/07/12/Gaussian-Filter/</a><br>
         License : 
         </blockquote>
       </div>
@@ -260,10 +287,16 @@
   
   
   
-    <div class="social-share" style="margin-top: -2rem" data-wechat-qrcode-title="<p>微信扫一扫</p>" data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>" data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter">
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
   <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
 </div>
-<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async></script>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
   
 
   

@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 
   
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
   
@@ -75,7 +75,10 @@
       
         <li class="nav-item" data-path="/">
           
-            <a href="/" target="_self">
+            <a 
+              href="/"
+              target="_self"
+            >
               Home
             </a>
           
@@ -83,7 +86,10 @@
       
         <li class="nav-item" data-path="/archives/">
           
-            <a href="/archives/" target="_self">
+            <a 
+              href="/archives/"
+              target="_self"
+            >
               Archives
             </a>
           
@@ -91,7 +97,10 @@
       
         <li class="nav-item" data-path="/categories/">
           
-            <a href="/categories/" target="_self">
+            <a 
+              href="/categories/"
+              target="_self"
+            >
               Categories
             </a>
           
@@ -99,7 +108,10 @@
       
         <li class="nav-item" data-path="/tags/">
           
-            <a href="/tags/" target="_self">
+            <a 
+              href="/tags/"
+              target="_self"
+            >
               Tags
             </a>
           
@@ -107,37 +119,52 @@
       
         <li class="nav-item" data-path="/about/">
           
-            <a href="/about/" target="_self">
+            <a 
+              href="/about/"
+              target="_self"
+            >
               About
             </a>
           
         </li>
       
-        <li class="nav-item" data-path>
+        <li class="nav-item" data-path="">
           
             <a href="javascript:void(0);" v-else>Me</a>
             <ul class="nav-menu--dropdown">
               
                 <li>
-                  <a href="https://github.com/sueLan" target="_blank">
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
                     Github
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.linkedin.com/in/rongyanzheng/" target="_blank">
+                  <a 
+                    href="https://www.linkedin.com/in/rongyanzheng/" 
+                    target="_blank"
+                  >
                     Linkedin
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.jianshu.com/u/23bd8d4cc8bf" target="_blank">
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
                     Jian Shu
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://yq.aliyun.com/users/gi7dnrwlx2mya" target="_blank">
+                  <a 
+                    href="https://yq.aliyun.com/users/gi7dnrwlx2mya" 
+                    target="_blank"
+                  >
                     Ali yun
                   </a>
                 </li>
@@ -292,7 +319,7 @@
 <p>它的处理流程是这样，对sematic image 进行resize、卷积、ReLU激活处理， 即$\gamma_{c, y, x}^i(m)$跟$\beta_{c, y, x}^{i}(m)$， 乘、加上<code>Batch Normalization</code>的输出数据$\frac{h_{n, c, y, x}^i - \mu_c^i}{\sigma_c^i}$ ，<br><img src="/img/7c2b5608-840f-411f-bcd4-024df194b0de/ad9094aa.png" alt="ab4c46cb.png"></p>
 <p>比起传统Batch Normal,SPADE的$\gamma_{c, y, x}^i(m)$跟$\beta_{c, y, x}^{i}(m)$是对sematic image做卷积操作，它在normalization过程中保存更多semantic的信息。论文中也认为这是SPADE效果更好的原因。</p>
 <h4 id="相关代码："><a href="#相关代码：" class="headerlink" title="相关代码："></a>相关代码：</h4><p><code>normalization.py</code></p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//  用传统的normalization method正则化激活函数输出</span><br><span class="line">  <span class="keyword">if</span> param_free_norm_type == <span class="string">'instance'</span>:</span><br><span class="line">      self.param_free_norm = nn.InstanceNorm2d(norm_nc, affine=<span class="keyword">False</span>)</span><br><span class="line">  <span class="keyword">elif</span> param_free_norm_type == <span class="string">'syncbatch'</span>:</span><br><span class="line">      self.param_free_norm = SynchronizedBatchNorm2d(norm_nc, affine=<span class="keyword">False</span>)</span><br><span class="line">  <span class="keyword">elif</span> param_free_norm_type == <span class="string">'batch'</span>:</span><br><span class="line">      self.param_free_norm = nn.BatchNorm2d(norm_nc, affine=<span class="keyword">False</span>)</span><br><span class="line">  <span class="keyword">else</span>:</span><br><span class="line">      <span class="keyword">raise</span> ValueError(<span class="string">'%s is not a recognized param-free norm type in SPADE'</span></span><br><span class="line">                             % param_free_norm_type)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//  用传统的normalization method正则化激活函数输出</span><br><span class="line">  <span class="keyword">if</span> param_free_norm_type == <span class="string">'instance'</span>:</span><br><span class="line">      self.param_free_norm = nn.InstanceNorm2d(norm_nc, affine=<span class="literal">False</span>)</span><br><span class="line">  <span class="keyword">elif</span> param_free_norm_type == <span class="string">'syncbatch'</span>:</span><br><span class="line">      self.param_free_norm = SynchronizedBatchNorm2d(norm_nc, affine=<span class="literal">False</span>)</span><br><span class="line">  <span class="keyword">elif</span> param_free_norm_type == <span class="string">'batch'</span>:</span><br><span class="line">      self.param_free_norm = nn.BatchNorm2d(norm_nc, affine=<span class="literal">False</span>)</span><br><span class="line">  <span class="keyword">else</span>:</span><br><span class="line">      <span class="keyword">raise</span> ValueError(<span class="string">'%s is not a recognized param-free norm type in SPADE'</span></span><br><span class="line">                             % param_free_norm_type)</span><br></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">// 构建gamma,beta函数, 卷积层实现</span><br><span class="line">self.mlp_gamma = nn.Conv2d(nhidden, norm_nc, kernel_size=ks, padding=pw)</span><br><span class="line">self.mlp_beta = nn.Conv2d(nhidden, norm_nc, kernel_size=ks, padding=pw)</span><br></pre></td></tr></table></figure>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">forward</span><span class="params">(self, x, segmap)</span>:</span></span><br><span class="line"></span><br><span class="line">      <span class="comment"># Part 1. generate parameter-free normalized activations</span></span><br><span class="line">      normalized = self.param_free_norm(x)</span><br><span class="line"></span><br><span class="line">      <span class="comment"># ✨✨✨ Part 2. produce scaling and bias conditioned on semantic map</span></span><br><span class="line">      segmap = F.interpolate(segmap, size=x.size()[<span class="number">2</span>:], mode=<span class="string">'nearest'</span>)</span><br><span class="line">      actv = self.mlp_shared(segmap)</span><br><span class="line">      gamma = self.mlp_gamma(actv)</span><br><span class="line">      beta = self.mlp_beta(actv)</span><br><span class="line"></span><br><span class="line">      <span class="comment"># apply scale and bias</span></span><br><span class="line">      out = normalized * (<span class="number">1</span> + gamma) + beta</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> out</span><br></pre></td></tr></table></figure>
 <h2 id="模型架构-GANs"><a href="#模型架构-GANs" class="headerlink" title="模型架构 GANs"></a>模型架构 GANs</h2><p>GANs由两部分组成： </p>
@@ -310,7 +337,7 @@
 <li>SPADE激活见上文分析</li>
 </ul>
 <p>那<code>ResBlk</code>呢？<br>这要从大名鼎鼎的残差网络说起 <a href="https://mooc.study.163.com/learn/2001281004?tid=2001392030&amp;_trace_c_p_k2_=5c60eb2c1e0d4adbb2516471e9ebb431#/learn/content?type=detail&amp;id=2001728692" target="_blank" rel="noopener">Residual block</a> （强烈推荐Andrew Ng公开课; 弄明白几个点： 1. Residual Block要解决什么问题;  2. 它的设计;  3. 为啥有效。 再回来看SPADE ResBlk)</p>
-<p><img src="/img/7c2b5608-840f-411f-bcd4-024df194b0de/fd021761.png" alt="fd021761.png"><br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, fin, fout, opt)</span>:</span></span><br><span class="line">    super().__init__()</span><br><span class="line">    <span class="comment"># Attributes</span></span><br><span class="line">    self.learned_shortcut = (fin != fout)</span><br><span class="line">    fmiddle = min(fin, fout)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># create conv layers</span></span><br><span class="line">    self.conv_0 = nn.Conv2d(fin, fmiddle, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">    self.conv_1 = nn.Conv2d(fmiddle, fout, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">if</span> self.learned_shortcut:</span><br><span class="line">        self.conv_s = nn.Conv2d(fin, fout, kernel_size=<span class="number">1</span>, bias=<span class="keyword">False</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># apply spectral norm if specified</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">'spectral'</span> <span class="keyword">in</span> opt.norm_G:</span><br><span class="line">        self.conv_0 = spectral_norm(self.conv_0)</span><br><span class="line">        self.conv_1 = spectral_norm(self.conv_1)</span><br><span class="line">        <span class="keyword">if</span> self.learned_shortcut:</span><br><span class="line">            self.conv_s = spectral_norm(self.conv_s)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ✨✨✨ define normalization layers</span></span><br><span class="line">    spade_config_str = opt.norm_G.replace(<span class="string">'spectral'</span>, <span class="string">''</span>)</span><br><span class="line">    self.norm_0 = SPADE(spade_config_str, fin, opt.semantic_nc)</span><br><span class="line">    self.norm_1 = SPADE(spade_config_str, fmiddle, opt.semantic_nc)</span><br><span class="line">    <span class="keyword">if</span> self.learned_shortcut:</span><br><span class="line">        self.norm_s = SPADE(spade_config_str, fin, opt.semantic_nc)</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/7c2b5608-840f-411f-bcd4-024df194b0de/fd021761.png" alt="fd021761.png"><br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, fin, fout, opt)</span>:</span></span><br><span class="line">    super().__init__()</span><br><span class="line">    <span class="comment"># Attributes</span></span><br><span class="line">    self.learned_shortcut = (fin != fout)</span><br><span class="line">    fmiddle = min(fin, fout)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># create conv layers</span></span><br><span class="line">    self.conv_0 = nn.Conv2d(fin, fmiddle, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">    self.conv_1 = nn.Conv2d(fmiddle, fout, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">if</span> self.learned_shortcut:</span><br><span class="line">        self.conv_s = nn.Conv2d(fin, fout, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># apply spectral norm if specified</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">'spectral'</span> <span class="keyword">in</span> opt.norm_G:</span><br><span class="line">        self.conv_0 = spectral_norm(self.conv_0)</span><br><span class="line">        self.conv_1 = spectral_norm(self.conv_1)</span><br><span class="line">        <span class="keyword">if</span> self.learned_shortcut:</span><br><span class="line">            self.conv_s = spectral_norm(self.conv_s)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ✨✨✨ define normalization layers</span></span><br><span class="line">    spade_config_str = opt.norm_G.replace(<span class="string">'spectral'</span>, <span class="string">''</span>)</span><br><span class="line">    self.norm_0 = SPADE(spade_config_str, fin, opt.semantic_nc)</span><br><span class="line">    self.norm_1 = SPADE(spade_config_str, fmiddle, opt.semantic_nc)</span><br><span class="line">    <span class="keyword">if</span> self.learned_shortcut:</span><br><span class="line">        self.norm_s = SPADE(spade_config_str, fin, opt.semantic_nc)</span><br></pre></td></tr></table></figure></p>
 <h2 id="Discriminator"><a href="#Discriminator" class="headerlink" title="Discriminator"></a>Discriminator</h2><p>discriminator架构图。 (segmentation image,  image)作为输入， 任务是识别image是不是假的。<br><img src="/img/7c2b5608-840f-411f-bcd4-024df194b0de/c5347e81.png" alt="c5347e81.png"></p>
 <p>image encoder将图片encode生成均值向量跟方差向量， 计算出noise input输入给generator, segmentation mask也会通过SPADE ResBlks输入给generator。 generator生成image跟segmentation image contact后，再输入给discriminator, discriminator来辨别真伪。<br><img src="/img/7c2b5608-840f-411f-bcd4-024df194b0de/f4341bd9.png" alt="f4341bd9.png"></p>
 <h3 id="Training-Data"><a href="#Training-Data" class="headerlink" title="Training Data"></a>Training Data</h3><p>成对的segmentation masks跟真实图片。 (segmentation mask, real image) </p>
@@ -345,9 +372,9 @@
         <blockquote>
         
         
-          Author : RY Zheng <br>
+          Author : RY Zheng <br/>
         
-        Link : <a href>https://suelan.github.io/2019/05/18/Semantic-Image-Synthesis-with-Spatially-Adaptive-Normalization/</a><br>
+        Link : <a href="">https://suelan.github.io/2019/05/18/Semantic-Image-Synthesis-with-Spatially-Adaptive-Normalization/</a><br>
         License : 
         </blockquote>
       </div>
@@ -355,10 +382,16 @@
   
   
   
-    <div class="social-share" style="margin-top: -2rem" data-wechat-qrcode-title="<p>微信扫一扫</p>" data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>" data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter">
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
   <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
 </div>
-<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async></script>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
   
 
   

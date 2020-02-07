@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 
   
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
   
@@ -75,7 +75,10 @@
       
         <li class="nav-item" data-path="/">
           
-            <a href="/" target="_self">
+            <a 
+              href="/"
+              target="_self"
+            >
               Home
             </a>
           
@@ -83,7 +86,10 @@
       
         <li class="nav-item" data-path="/archives/">
           
-            <a href="/archives/" target="_self">
+            <a 
+              href="/archives/"
+              target="_self"
+            >
               Archives
             </a>
           
@@ -91,7 +97,10 @@
       
         <li class="nav-item" data-path="/categories/">
           
-            <a href="/categories/" target="_self">
+            <a 
+              href="/categories/"
+              target="_self"
+            >
               Categories
             </a>
           
@@ -99,7 +108,10 @@
       
         <li class="nav-item" data-path="/tags/">
           
-            <a href="/tags/" target="_self">
+            <a 
+              href="/tags/"
+              target="_self"
+            >
               Tags
             </a>
           
@@ -107,37 +119,52 @@
       
         <li class="nav-item" data-path="/about/">
           
-            <a href="/about/" target="_self">
+            <a 
+              href="/about/"
+              target="_self"
+            >
               About
             </a>
           
         </li>
       
-        <li class="nav-item" data-path>
+        <li class="nav-item" data-path="">
           
             <a href="javascript:void(0);" v-else>Me</a>
             <ul class="nav-menu--dropdown">
               
                 <li>
-                  <a href="https://github.com/sueLan" target="_blank">
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
                     Github
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.linkedin.com/in/rongyanzheng/" target="_blank">
+                  <a 
+                    href="https://www.linkedin.com/in/rongyanzheng/" 
+                    target="_blank"
+                  >
                     Linkedin
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.jianshu.com/u/23bd8d4cc8bf" target="_blank">
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
                     Jian Shu
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://yq.aliyun.com/users/gi7dnrwlx2mya" target="_blank">
+                  <a 
+                    href="https://yq.aliyun.com/users/gi7dnrwlx2mya" 
+                    target="_blank"
+                  >
                     Ali yun
                   </a>
                 </li>
@@ -227,7 +254,7 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <p></p>
+      </p>
 <h1 id="Unique-Paths-1-2"><a href="#Unique-Paths-1-2" class="headerlink" title="Unique Paths 1-2"></a>Unique Paths 1-2</h1><h2 id="题目1：-Unique-Paths-1"><a href="#题目1：-Unique-Paths-1" class="headerlink" title="题目1： Unique Paths 1"></a>题目1： <a href="https://leetcode.com/problems/unique-paths/" target="_blank" rel="noopener">Unique Paths 1</a></h2><p><img src="/img//c5619f25-13a6-4e38-b7f8-d87ff624f5b5/e2ca2848.png" alt="e2ca2848.png"></p>
 <h3 id="动态规划解题步骤要点"><a href="#动态规划解题步骤要点" class="headerlink" title="动态规划解题步骤要点:"></a>动态规划解题步骤要点:</h3><ol>
 <li>找到最优解的结构</li>
@@ -252,11 +279,11 @@
 </ul>
 <p>很容易发现规律， grids[m][n] = grids[m - 1][n] + grides[m][n -1]; 可用递归求解。但是纯碎的递归有很多重复计算。 如下图的递归树：<br><img src="/img//c5619f25-13a6-4e38-b7f8-d87ff624f5b5/72a3d4ef.png" alt="72a3d4ef.png"><br>所以我们引入一个record数组，记录已经计算的结果，省去重复计算。</p>
 <p>时间复杂度:<br>o(m* n)</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">inner_path</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> j, <span class="keyword">int</span> m, <span class="keyword">int</span> n, <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; record)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (i &lt; <span class="number">0</span> || j &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (record[i][j]) &#123;</span><br><span class="line">        <span class="keyword">return</span> record[i][j];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((i == <span class="number">0</span>) &amp;&amp; (j == <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    record[i][j] = inner_path(i<span class="number">-1</span>, j, m, n, record) + inner_path(i, j<span class="number">-1</span>, m, n, record);</span><br><span class="line">    <span class="keyword">return</span> record[i][j];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">uniquePaths</span><span class="params">(<span class="keyword">int</span> m, <span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; res(m, <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;(n, <span class="number">0</span>));</span><br><span class="line">    <span class="keyword">return</span> inner_path(m<span class="number">-1</span>, n<span class="number">-1</span>, m, n, res);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">inner_path</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> j, <span class="keyword">int</span> m, <span class="keyword">int</span> n, <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; record)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (i &lt; <span class="number">0</span> || j &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (record[i][j]) &#123;</span><br><span class="line">        <span class="keyword">return</span> record[i][j];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((i == <span class="number">0</span>) &amp;&amp; (j == <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    record[i][j] = inner_path(i<span class="number">-1</span>, j, m, n, record) + inner_path(i, j<span class="number">-1</span>, m, n, record);</span><br><span class="line">    <span class="keyword">return</span> record[i][j];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">uniquePaths</span><span class="params">(<span class="keyword">int</span> m, <span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; <span class="title">res</span><span class="params">(m, <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;(n, <span class="number">0</span>))</span></span>;</span><br><span class="line">    <span class="keyword">return</span> inner_path(m<span class="number">-1</span>, n<span class="number">-1</span>, m, n, res);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="Unique-Paths-2"><a href="#Unique-Paths-2" class="headerlink" title="Unique Paths 2"></a><a href="https://leetcode.com/problems/unique-paths-ii/" target="_blank" rel="noopener">Unique Paths 2</a></h3><p>分析：<br>跟Unique Paths 1比起来，多了障碍物。如果(i, j)是障碍物，那么grid(i, j) = 0, 表示我们无法经由(i, j) 到达终点。</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">path_helper</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> j, <span class="keyword">int</span> m, <span class="keyword">int</span> n, <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; record, <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; &amp;obstacleGrid)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (i &lt; <span class="number">0</span> || j &lt; <span class="number">0</span> || obstacleGrid[i][j] == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (record[i][j]) &#123;</span><br><span class="line">            <span class="keyword">return</span> record[i][j];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((i == <span class="number">0</span>) &amp;&amp; (j == <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        record[i][j] = path_helper(i - <span class="number">1</span>, j, m, n, record, obstacleGrid) + path_helper(i, j - <span class="number">1</span>, m, n, record, obstacleGrid);</span><br><span class="line">        <span class="keyword">return</span> record[i][j];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">uniquePathsWithObstacles</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; obstacleGrid)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (obstacleGrid.empty()) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> m = (<span class="keyword">int</span>)obstacleGrid.size();</span><br><span class="line">        <span class="keyword">int</span> n = (<span class="keyword">int</span>)obstacleGrid[<span class="number">0</span>].size();</span><br><span class="line"></span><br><span class="line">        <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; res(m, <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;(n, <span class="number">0</span>));</span><br><span class="line">        <span class="keyword">return</span> path_helper(m - <span class="number">1</span>, n - <span class="number">1</span>, m, n, res, obstacleGrid);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">path_helper</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> j, <span class="keyword">int</span> m, <span class="keyword">int</span> n, <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; record, <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; &amp;obstacleGrid)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (i &lt; <span class="number">0</span> || j &lt; <span class="number">0</span> || obstacleGrid[i][j] == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (record[i][j]) &#123;</span><br><span class="line">            <span class="keyword">return</span> record[i][j];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((i == <span class="number">0</span>) &amp;&amp; (j == <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        record[i][j] = path_helper(i - <span class="number">1</span>, j, m, n, record, obstacleGrid) + path_helper(i, j - <span class="number">1</span>, m, n, record, obstacleGrid);</span><br><span class="line">        <span class="keyword">return</span> record[i][j];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">uniquePathsWithObstacles</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; obstacleGrid)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (obstacleGrid.empty()) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> m = (<span class="keyword">int</span>)obstacleGrid.size();</span><br><span class="line">        <span class="keyword">int</span> n = (<span class="keyword">int</span>)obstacleGrid[<span class="number">0</span>].size();</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; <span class="title">res</span><span class="params">(m, <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;(n, <span class="number">0</span>))</span></span>;</span><br><span class="line">        <span class="keyword">return</span> path_helper(m - <span class="number">1</span>, n - <span class="number">1</span>, m, n, res, obstacleGrid);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 <p>自底向上的写法： </p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">uniquePathsWithObstacles</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; grid)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">int</span> rows = grid.size();</span><br><span class="line">     <span class="keyword">if</span>(rows == <span class="number">0</span>) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">     <span class="keyword">int</span> cols = grid[<span class="number">0</span>].size();</span><br><span class="line">     <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">long</span>&gt;&gt; res(rows+<span class="number">1</span>, <span class="built_in">vector</span>&lt;<span class="keyword">long</span>&gt;(cols+<span class="number">1</span>, <span class="number">0</span>));</span><br><span class="line">     <span class="keyword">for</span>(<span class="keyword">int</span> i=rows<span class="number">-1</span>; i&gt;=<span class="number">0</span>;i--)&#123;</span><br><span class="line">         <span class="keyword">for</span>(<span class="keyword">int</span> j=cols<span class="number">-1</span>; j&gt;=<span class="number">0</span>;j--)&#123;</span><br><span class="line">             <span class="keyword">if</span>(grid[i][j] == <span class="number">1</span>) res[i][j] = <span class="number">0</span>;</span><br><span class="line">             <span class="keyword">else</span> <span class="keyword">if</span>(i == rows<span class="number">-1</span> &amp;&amp; j == cols<span class="number">-1</span>) res[i][j] = <span class="number">1</span>;</span><br><span class="line">             <span class="keyword">else</span> res[i][j] = res[i][j+<span class="number">1</span>] + res[i+<span class="number">1</span>][j];</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> res[<span class="number">0</span>][<span class="number">0</span>];</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">uniquePathsWithObstacles</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; grid)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">int</span> rows = grid.size();</span><br><span class="line">     <span class="keyword">if</span>(rows == <span class="number">0</span>) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">     <span class="keyword">int</span> cols = grid[<span class="number">0</span>].size();</span><br><span class="line">     <span class="function"><span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">long</span>&gt;&gt; <span class="title">res</span><span class="params">(rows+<span class="number">1</span>, <span class="built_in">vector</span>&lt;<span class="keyword">long</span>&gt;(cols+<span class="number">1</span>, <span class="number">0</span>))</span></span>;</span><br><span class="line">     <span class="keyword">for</span>(<span class="keyword">int</span> i=rows<span class="number">-1</span>; i&gt;=<span class="number">0</span>;i--)&#123;</span><br><span class="line">         <span class="keyword">for</span>(<span class="keyword">int</span> j=cols<span class="number">-1</span>; j&gt;=<span class="number">0</span>;j--)&#123;</span><br><span class="line">             <span class="keyword">if</span>(grid[i][j] == <span class="number">1</span>) res[i][j] = <span class="number">0</span>;</span><br><span class="line">             <span class="keyword">else</span> <span class="keyword">if</span>(i == rows<span class="number">-1</span> &amp;&amp; j == cols<span class="number">-1</span>) res[i][j] = <span class="number">1</span>;</span><br><span class="line">             <span class="keyword">else</span> res[i][j] = res[i][j+<span class="number">1</span>] + res[i+<span class="number">1</span>][j];</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> res[<span class="number">0</span>][<span class="number">0</span>];</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
     </div>
   </div>
   
@@ -265,9 +292,9 @@
         <blockquote>
         
         
-          Author : RY Zheng <br>
+          Author : RY Zheng <br/>
         
-        Link : <a href>https://suelan.github.io/2019/05/08/Leetcode-Unique-Paths-1-2/</a><br>
+        Link : <a href="">https://suelan.github.io/2019/05/08/Leetcode-Unique-Paths-1-2/</a><br>
         License : 
         </blockquote>
       </div>
@@ -275,10 +302,16 @@
   
   
   
-    <div class="social-share" style="margin-top: -2rem" data-wechat-qrcode-title="<p>微信扫一扫</p>" data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>" data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter">
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
   <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
 </div>
-<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async></script>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
   
 
   

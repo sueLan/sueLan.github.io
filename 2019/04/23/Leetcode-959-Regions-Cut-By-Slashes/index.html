@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 
   
-<head><meta name="generator" content="Hexo 3.8.0">
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   <meta name="author" content="董沅鑫, yuanxin.me@gmail.com">
   
@@ -75,7 +75,10 @@
       
         <li class="nav-item" data-path="/">
           
-            <a href="/" target="_self">
+            <a 
+              href="/"
+              target="_self"
+            >
               Home
             </a>
           
@@ -83,7 +86,10 @@
       
         <li class="nav-item" data-path="/archives/">
           
-            <a href="/archives/" target="_self">
+            <a 
+              href="/archives/"
+              target="_self"
+            >
               Archives
             </a>
           
@@ -91,7 +97,10 @@
       
         <li class="nav-item" data-path="/categories/">
           
-            <a href="/categories/" target="_self">
+            <a 
+              href="/categories/"
+              target="_self"
+            >
               Categories
             </a>
           
@@ -99,7 +108,10 @@
       
         <li class="nav-item" data-path="/tags/">
           
-            <a href="/tags/" target="_self">
+            <a 
+              href="/tags/"
+              target="_self"
+            >
               Tags
             </a>
           
@@ -107,37 +119,52 @@
       
         <li class="nav-item" data-path="/about/">
           
-            <a href="/about/" target="_self">
+            <a 
+              href="/about/"
+              target="_self"
+            >
               About
             </a>
           
         </li>
       
-        <li class="nav-item" data-path>
+        <li class="nav-item" data-path="">
           
             <a href="javascript:void(0);" v-else>Me</a>
             <ul class="nav-menu--dropdown">
               
                 <li>
-                  <a href="https://github.com/sueLan" target="_blank">
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
                     Github
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.linkedin.com/in/rongyanzheng/" target="_blank">
+                  <a 
+                    href="https://www.linkedin.com/in/rongyanzheng/" 
+                    target="_blank"
+                  >
                     Linkedin
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://www.jianshu.com/u/23bd8d4cc8bf" target="_blank">
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
                     Jian Shu
                   </a>
                 </li>
               
                 <li>
-                  <a href="https://yq.aliyun.com/users/gi7dnrwlx2mya" target="_blank">
+                  <a 
+                    href="https://yq.aliyun.com/users/gi7dnrwlx2mya" 
+                    target="_blank"
+                  >
                     Ali yun
                   </a>
                 </li>
@@ -234,7 +261,7 @@
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[</span><br><span class="line"> <span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,</span><br><span class="line"> <span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,</span><br><span class="line"> <span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span></span><br><span class="line"> <span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span></span><br><span class="line"> <span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span></span><br><span class="line"> <span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
 <p>问题就变成： 计算被1分割开的区域的数量。</p>
 <p>类似的<a href="https://www.geeksforgeeks.org/find-number-of-islands/" target="_blank" rel="noopener">孤岛数量问题</a> 都是同一个问题的变种：<a href="https://www.geeksforgeeks.org/connected-components-in-an-undirected-graph/" target="_blank" rel="noopener">Counting the number of connected components in an undirected graph</a></p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dfs</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; board, <span class="keyword">int</span> i, <span class="keyword">int</span> j )</span> </span>&#123;</span><br><span class="line">    <span class="comment">// index out of range</span></span><br><span class="line">    <span class="keyword">if</span> (i &lt; <span class="number">0</span> || j &lt; <span class="number">0</span> || i &gt;= board.size() || j &gt;= board[<span class="number">0</span>].size()) <span class="keyword">return</span>;</span><br><span class="line">    <span class="comment">// this grid has been visited or it was part of a slash character</span></span><br><span class="line">    <span class="keyword">if</span> (board[i][j] == <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// mark this grid visited</span></span><br><span class="line">    board[i][j] = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    dfs(board, i - <span class="number">1</span>, j);</span><br><span class="line">    dfs(board, i + <span class="number">1</span>, j);</span><br><span class="line">    dfs(board, i, j - <span class="number">1</span>);</span><br><span class="line">    dfs(board, i, j + <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">regionsBySlashes</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt;&amp; grid)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (grid.empty())</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> row = (<span class="keyword">int</span>)grid.size(), col = (<span class="keyword">int</span>)grid[<span class="number">0</span>].size();</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; board (row * <span class="number">3</span>, <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;(col * <span class="number">3</span>, <span class="number">0</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// n*n graph represented as 3n*3n graph</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; ++i) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; ++j) &#123;</span><br><span class="line">            <span class="keyword">if</span> (grid[i][j] == <span class="string">'/'</span>) board[i * <span class="number">3</span>][j * <span class="number">3</span> + <span class="number">2</span>] = board[i * <span class="number">3</span> + <span class="number">1</span>][j * <span class="number">3</span> + <span class="number">1</span>] = board[i * <span class="number">3</span> + <span class="number">2</span>][j * <span class="number">3</span>] = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">if</span> (grid[i][j] == <span class="string">'\\'</span>) board[i * <span class="number">3</span>][j * <span class="number">3</span>] = board[i * <span class="number">3</span> + <span class="number">1</span>][j * <span class="number">3</span> + <span class="number">1</span>] = board[i * <span class="number">3</span> + <span class="number">2</span>][j * <span class="number">3</span> + <span class="number">2</span>] = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> cnt = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row * <span class="number">3</span>; ++i) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col * <span class="number">3</span>; ++j) &#123;</span><br><span class="line">            <span class="comment">// only count components connected by space</span></span><br><span class="line">            <span class="keyword">if</span> (!board[i][j]) &#123;</span><br><span class="line">               dfs(board, i, j);</span><br><span class="line">               cnt++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> cnt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">dfs</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt;&amp; board, <span class="keyword">int</span> i, <span class="keyword">int</span> j )</span> </span>&#123;</span><br><span class="line">    <span class="comment">// index out of range</span></span><br><span class="line">    <span class="keyword">if</span> (i &lt; <span class="number">0</span> || j &lt; <span class="number">0</span> || i &gt;= board.size() || j &gt;= board[<span class="number">0</span>].size()) <span class="keyword">return</span>;</span><br><span class="line">    <span class="comment">// this grid has been visited or it was part of a slash character</span></span><br><span class="line">    <span class="keyword">if</span> (board[i][j] == <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// mark this grid visited</span></span><br><span class="line">    board[i][j] = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    dfs(board, i - <span class="number">1</span>, j);</span><br><span class="line">    dfs(board, i + <span class="number">1</span>, j);</span><br><span class="line">    dfs(board, i, j - <span class="number">1</span>);</span><br><span class="line">    dfs(board, i, j + <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">regionsBySlashes</span><span class="params">(<span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt;&amp; grid)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (grid.empty())</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> row = (<span class="keyword">int</span>)grid.size(), col = (<span class="keyword">int</span>)grid[<span class="number">0</span>].size();</span><br><span class="line">    <span class="function"><span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;&gt; <span class="title">board</span> <span class="params">(row * <span class="number">3</span>, <span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;(col * <span class="number">3</span>, <span class="number">0</span>))</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// n*n graph represented as 3n*3n graph</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; ++i) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; ++j) &#123;</span><br><span class="line">            <span class="keyword">if</span> (grid[i][j] == <span class="string">'/'</span>) board[i * <span class="number">3</span>][j * <span class="number">3</span> + <span class="number">2</span>] = board[i * <span class="number">3</span> + <span class="number">1</span>][j * <span class="number">3</span> + <span class="number">1</span>] = board[i * <span class="number">3</span> + <span class="number">2</span>][j * <span class="number">3</span>] = <span class="number">1</span>;</span><br><span class="line">            <span class="keyword">if</span> (grid[i][j] == <span class="string">'\\'</span>) board[i * <span class="number">3</span>][j * <span class="number">3</span>] = board[i * <span class="number">3</span> + <span class="number">1</span>][j * <span class="number">3</span> + <span class="number">1</span>] = board[i * <span class="number">3</span> + <span class="number">2</span>][j * <span class="number">3</span> + <span class="number">2</span>] = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> cnt = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row * <span class="number">3</span>; ++i) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col * <span class="number">3</span>; ++j) &#123;</span><br><span class="line">            <span class="comment">// only count components connected by space</span></span><br><span class="line">            <span class="keyword">if</span> (!board[i][j]) &#123;</span><br><span class="line">               dfs(board, i, j);</span><br><span class="line">               cnt++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> cnt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>如果分割为2*2的格子，会遇到这个问题:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Input:</span><br><span class="line">[</span><br><span class="line">  &quot;//&quot;,</span><br><span class="line">  &quot;/ &quot;</span><br><span class="line">]</span><br><span class="line">Output: 5</span><br><span class="line">Expected: 3</span><br><span class="line"></span><br><span class="line">0101</span><br><span class="line">1010</span><br><span class="line">0100</span><br><span class="line">1000</span><br></pre></td></tr></table></figure></p>
 <p>01<strong>0</strong>1<br>1<strong>0</strong>10<br><strong>0</strong>100<br>1000</p>
 <p>加粗的这三个0，被分割开了。题意要求是连在一起的。</p>
@@ -293,9 +320,9 @@
         <blockquote>
         
         
-          Author : RY Zheng <br>
+          Author : RY Zheng <br/>
         
-        Link : <a href>https://suelan.github.io/2019/04/23/Leetcode-959-Regions-Cut-By-Slashes/</a><br>
+        Link : <a href="">https://suelan.github.io/2019/04/23/Leetcode-959-Regions-Cut-By-Slashes/</a><br>
         License : 
         </blockquote>
       </div>
@@ -303,10 +330,16 @@
   
   
   
-    <div class="social-share" style="margin-top: -2rem" data-wechat-qrcode-title="<p>微信扫一扫</p>" data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>" data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter">
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
   <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
 </div>
-<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async></script>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
   
 
   
