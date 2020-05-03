@@ -254,12 +254,15 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <p>This is an pretty good session about iOS memory. <a href="https://developer.apple.com/videos/play/wwdc2018/416/" target="_blank" rel="noopener">iOS Memory Deep Dive - WWDC 2018 - Videos - Apple Developer</a> </p>
-<p>Not all memory is created equal. There are dirty memory, clean memory, compressed memory in iOS system. </p>
-<h2 id="Page"><a href="#Page" class="headerlink" title="Page"></a>Page</h2><p>Typically 16KB in size and system gives it to you. </p>
+      <p>This is an pretty good session about iOS memory. <a href="https://developer.apple.com/videos/play/wwdc2018/416/" target="_blank" rel="noopener">iOS Memory Deep Dive - WWDC 2018 - Videos - Apple Developer</a>. I saw it and took some notes here. </p>
+<blockquote>
+<p>Not all memory is created equal. </p>
+</blockquote>
+<p>There are dirty memory, clean memory, compressed memory in iOS system. We have to know the differences between them. </p>
+<h2 id="Page"><a href="#Page" class="headerlink" title="Page"></a>Page</h2><p>Page is typically 16KB in size and operating system gives it to you when your app requests memory.  </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memory in use = number of pages x page size</span><br></pre></td></tr></table></figure>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/b576f28d.png" alt="b576f28d.png"></p>
-<p>Some pages can hold multiple objects, and somes objects<br>can span multiple pages. </p>
+<p>Some pages can hold multiple objects, and some objects<br>can span multiple pages. </p>
 <h3 id="Pages-Types"><a href="#Pages-Types" class="headerlink" title="Pages Types"></a>Pages Types</h3><ul>
 <li><p>Clean</p>
 <ul>
@@ -286,7 +289,7 @@
 <li>Compresses unaccessed pages </li>
 <li>Decompresses pages upon access</li>
 </ul>
-<p>Berfore being compressed: </p>
+<p>Before being compressed: </p>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/cdb635fb.png" alt="cdb635fb.png"></p>
 <p>After being compressed:<br><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/8b7d45fa.png" alt="8b7d45fa.png"></p>
 <p>When you got Memory warning, you App is not always the cause. Maybe because the compressor freeing memory. Like, you receiving a phone call while using the App.</p>
@@ -325,10 +328,9 @@
 <li>memory graph </li>
 </ol>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/af606628.png" alt="af606628.png"></p>
-<h2 id="working-with-memory-graph-using-commands"><a href="#working-with-memory-graph-using-commands" class="headerlink" title="working with memory graph using commands"></a>working with memory graph using commands</h2><h3 id="vmmap"><a href="#vmmap" class="headerlink" title="vmmap"></a>vmmap</h3><p><code>vmmap</code> helps to show some dirty memory info of your app. In general, we should look for the big numbers for the size.<br>There are <code>virtual size</code>, <code>resident size</code>, <code>dirty size</code>, <code>swapped size</code> columns here. </p>
+<h2 id="working-with-memory-graph-using-commands"><a href="#working-with-memory-graph-using-commands" class="headerlink" title="working with memory graph using commands"></a>working with memory graph using commands</h2><h3 id="vmmap"><a href="#vmmap" class="headerlink" title="vmmap"></a>vmmap</h3><p><code>vmmap</code> helps to show some dirty memory info of your app. In general, we should look for the big number for the size.<br>There are <code>virtual size</code>, <code>resident size</code>, <code>dirty size</code>, <code>swapped size</code> columns here. </p>
 <p>According to this <a href="https://developer.apple.com/videos/play/wwdc2018/416/" target="_blank" rel="noopener">session</a>, we can ignore the <code>virtual size</code>, because it is memory requested by the app, while not neccessarily be used.  <code>swapped size</code> is related to compressed memory. So we should care more about <code>dirty size</code> and <code>swapped size</code>.</p>
-<h4 id="An-example-of-using-vmmap-to-debug-a-memory-issue"><a href="#An-example-of-using-vmmap-to-debug-a-memory-issue" class="headerlink" title="An example of using vmmap to debug a memory issue"></a>An example of using vmmap to debug a memory issue</h4><p>This example comes from <a href="https://developer.apple.com/videos/play/wwdc2018/416/" target="_blank" rel="noopener">session</a>.</p>
-<p>First, we can use summary info to look for the big numbers in <code>virtual size</code> and <code>swapped size</code> colomn. Here, we find <code>CG Image</code> takes much more memory than others. </p>
+<h4 id="An-example-of-using-vmmap-to-debug-a-memory-issue"><a href="#An-example-of-using-vmmap-to-debug-a-memory-issue" class="headerlink" title="An example of using vmmap to debug a memory issue"></a>An example of using vmmap to debug a memory issue</h4><p>First, we can use summary info to look for the big numbers in <code>virtual size</code> and <code>swapped size</code> colomn. Here, we find <code>CG Image</code> takes much more memory than others. </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmmap --summary PlanetPics.memgraph</span><br></pre></td></tr></table></figure>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/d58088d1.png" alt="d58088d1.png"></p>
 <p>Then, we use <code>grep</code> to get more info about <code>CG Image</code>.<br><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/751c8f78.png" alt="751c8f78.png"></p>
@@ -337,13 +339,13 @@
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/14c0b2ff.png" alt="14c0b2ff.png"></p>
 <p>And we will more regions.   </p>
 <blockquote>
-<p>It turns out that vmmap, by default, if it finds contiguous regions, it collapses. A general rule. the later region was created, the later my app’s life cycle it happened. Chance are this later region is more closely tied to whatever casued that memory pike. </p>
+<p>It turns out that vmmap, by default, if it finds contiguous regions, it collapses. A general rule. the later region was created, the later my app’s life cycle it happened. Chance are this later region is more closely tied to whatever caused that memory pike. </p>
 </blockquote>
 <p>So, we start to look at the last region. We can use the start memory address of the last region and search it in the memory graph in XCode.</p>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/5d389834.png" alt="5d389834.png"></p>
-<p>Or use <code>leak</code> to get the trace tree. By scaning these info, we would find more clues. </p>
+<p>Or use <code>leak</code> to get the trace tree. By scanning these info, we would find more clues. </p>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/f63287f5.png" alt="f63287f5.png"></p>
-<p>Here, using <code>malloc_history</code> to see the backtrace for this object, we found the related code creating this particular VM memory. </p>
+<p>Here, using <code>malloc_history</code> to see the back trace for this object, we found the related code creating this particular VM memory. </p>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/d8143352.png" alt="d8143352.png"></p>
 <ol>
 <li>vmmap and AWK</li>
@@ -357,7 +359,7 @@
 <li><p>root object<br><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/fbc1d8bb.png" alt="fbc1d8bb.png"></p>
 </li>
 </ul>
-<h2 id="heap"><a href="#heap" class="headerlink" title="heap"></a>heap</h2><ul>
+<h3 id="heap"><a href="#heap" class="headerlink" title="heap"></a>heap</h3><ul>
 <li>Shows objects allocated on the heap; </li>
 <li>useful for indentifying large objects in memory adn what allocated it. <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">heap App.memgraph</span><br><span class="line">heap App.memgraph -addresses all | &lt;classes-pattern&gt;</span><br></pre></td></tr></table></figure>
 </li>
@@ -365,7 +367,7 @@
 <p><code>heap</code> command shows the class name  in <code>CLASS_NAME</code> column, the num of the class in <code>COUNT</code> column, the average size of the object  in the <code>AVG</code> column, the total size in the <code>BYTES</code> column. </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">heap App.memgraph -sortBySize</span><br></pre></td></tr></table></figure>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/b0766b6a.png" alt="b0766b6a.png"></p>
-<h3 id="malloc-history"><a href="#malloc-history" class="headerlink" title="malloc_history"></a>malloc_history</h3><p>In some cases, we not only want to know the memory size, but also want to know the how it created. So, here comes the malloc_history command.</p>
+<h3 id="malloc-history"><a href="#malloc-history" class="headerlink" title="malloc_history"></a>malloc_history</h3><p>In some cases, we not only want to know the memory size, but also want to know the how it created. So, here comes the <code>malloc_history</code> command.</p>
 <ul>
 <li>enable the malloc_stack logging</li>
 </ul>
