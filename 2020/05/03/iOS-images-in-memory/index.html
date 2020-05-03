@@ -254,9 +254,9 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <p>Memory is a finite and shared resouces in mobile system, while image<br>Memory use is related to the dimensions of the images, not the file size.</p>
-<h2 id="The-momory-use-of-an-RGBA-image"><a href="#The-momory-use-of-an-RGBA-image" class="headerlink" title="The momory use of an RGBA image"></a>The momory use of an RGBA image</h2><p>Take the following image as an intance, its file size is 590KB, with dimension 2048 x 1536 pixel.<br><img src="28bfb5ac-c3fa-4575-a1b1-72fcbacc9069/83dca9cf.png" alt="83dca9cf.png"></p>
-<h4 id="4-byetes-for-each-pixel-in-RGBA"><a href="#4-byetes-for-each-pixel-in-RGBA" class="headerlink" title="4 byetes for each pixel in RGBA"></a>4 byetes for each pixel in RGBA</h4><p>By this <a href="https://www.objc.io/issues/3-views/moving-pixels-onto-the-screen/" target="_blank" rel="noopener">article</a>, each pixel in RGBA image needs 32bit, 4 bytes, in memory when it’s decoded. Because in RGBA, the range of each channel value is from 0 to 255, which needs 8 bits to represent the value. </p>
+      <p>Memory is a finite and shared resources in mobile system, while image<br>Memory use is related to the dimensions of the images, not the file size.</p>
+<h2 id="The-memory-use-of-an-image-using-sRGB-space"><a href="#The-memory-use-of-an-image-using-sRGB-space" class="headerlink" title="The memory use of an image using sRGB space"></a>The memory use of an image using sRGB space</h2><p>Take the following image as an instance, its file size is 590KB, with dimension 2048 x 1536 pixel.<br><img src="28bfb5ac-c3fa-4575-a1b1-72fcbacc9069/83dca9cf.png" alt="83dca9cf.png"></p>
+<h4 id="4-byetes-for-each-pixel-in-RGBA"><a href="#4-byetes-for-each-pixel-in-RGBA" class="headerlink" title="4 byetes for each pixel in RGBA"></a>4 byetes for each pixel in RGBA</h4><p>By this <a href="https://www.objc.io/issues/3-views/moving-pixels-onto-the-screen/" target="_blank" rel="noopener">article</a>, each pixel in sRGB image needs 32bit, 4 bytes, in memory when it’s decoded. Because in sRGB, there are Red, Green, Blue 3 channels and Alpha. The range of each channel value is from 0 to 255, which needs 8 bits to represent the value. </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"> A   R   G   B   A   R   G   B   A   R   G   B  </span><br><span class="line">| pixel 0       | pixel 1       | pixel 2   </span><br><span class="line"> 0  233  2  100  4  155 255  7   8   9   10  11</span><br></pre></td></tr></table></figure>
 <h4 id="More-memory-usage-when-decoding-a-image"><a href="#More-memory-usage-when-decoding-a-image" class="headerlink" title="More memory usage when decoding a image"></a>More memory usage when decoding a image</h4><p>By this <a href="https://developer.apple.com/videos/play/wwdc2018/219" target="_blank" rel="noopener">session</a>, a image have load -&gt; decode -&gt; render these 3 phases.  </p>
 <p><img src="28bfb5ac-c3fa-4575-a1b1-72fcbacc9069/ed4e1c96.png" alt="64aaa3cd.png"></p>
@@ -268,7 +268,7 @@
 </ul>
 <h3 id="Wide-format"><a href="#Wide-format" class="headerlink" title="Wide format"></a>Wide format</h3><ul>
 <li>8 bytes per pixel </li>
-<li>super accurate colors. Because they use 8bytes, 16 bits, for each channel. It means the range of each channel value is  [0, 2^16 - 1].  In the meantime, double the image size.  </li>
+<li>super accurate colors. Because they use 8bytes, 16 bits, for each channel. In the meantime, double the image size.  </li>
 <li>Only useful with wide color display. We don’t want to use it when we don’t need to. </li>
 <li>Wide color capture cameras since iPhone 7</li>
 </ul>
