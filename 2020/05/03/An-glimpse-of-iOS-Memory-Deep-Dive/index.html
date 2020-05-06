@@ -335,7 +335,8 @@
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/d58088d1.png" alt="d58088d1.png"></p>
 <p>Then, we use <code>grep</code> to get more info about <code>CG Image</code>.<br><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/751c8f78.png" alt="751c8f78.png"></p>
 <p>There are  two regions here, the last row is summary info. The secong CG Image region takes more takes more dirty and swapped memory. So we have to see more infomation of this region by using <code>--verbose</code> option.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmmap --verbose PlanetPics.memgraph | grep &quot; CG image&quot;</span><br></pre></td></tr></table></figure>
+<p>All these commands can work with other shell commands, like redirecting the output stream a <code>output.txt</code> file. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmmap --verbose PlanetPics.memgraph | grep &quot; CG image&quot; | &gt; output.txt</span><br></pre></td></tr></table></figure>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/14c0b2ff.png" alt="14c0b2ff.png"></p>
 <p>And we will more regions.   </p>
 <blockquote>
@@ -365,7 +366,7 @@
 </li>
 </ul>
 <p><code>heap</code> command shows the class name  in <code>CLASS_NAME</code> column, the num of the class in <code>COUNT</code> column, the average size of the object  in the <code>AVG</code> column, the total size in the <code>BYTES</code> column. </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">heap App.memgraph -sortBySize</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">heap App.memgraph -sortBySize | &gt; ~/output.txt</span><br></pre></td></tr></table></figure>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/b0766b6a.png" alt="b0766b6a.png"></p>
 <h3 id="malloc-history"><a href="#malloc-history" class="headerlink" title="malloc_history"></a>malloc_history</h3><p>In some cases, we not only want to know the memory size, but also want to know the how it created. So, here comes the <code>malloc_history</code> command.</p>
 <ul>
@@ -375,6 +376,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">malloc_history App.memgraph [address]</span><br></pre></td></tr></table></figure>
 <p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/a70d0d43.png" alt="a70d0d43.png"></p>
 <h3 id="Which-tool-to-pick"><a href="#Which-tool-to-pick" class="headerlink" title="Which tool to pick"></a>Which tool to pick</h3><p><img src="f30bdfea-25ac-4eb9-af3e-278a74a85022/d68340ee.png" alt="d68340ee.png"></p>
+<p>Use <code>vmmap</code> and <code>heap</code> to find some objects or regions with big number,  use <code>leak</code> to see references between objects, like finding circular reference; use <code>malloc_history</code> to see how it is created.  </p>
 
     </div>
   </div>
