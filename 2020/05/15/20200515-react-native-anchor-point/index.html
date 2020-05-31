@@ -144,10 +144,10 @@
               
                 <li>
                   <a 
-                    href="https://www.linkedin.com/in/rongyanzheng/" 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
                     target="_blank"
                   >
-                    Linkedin
+                    StackOverflow
                   </a>
                 </li>
               
@@ -157,15 +157,6 @@
                     target="_blank"
                   >
                     Jian Shu
-                  </a>
-                </li>
-              
-                <li>
-                  <a 
-                    href="https://yq.aliyun.com/users/gi7dnrwlx2mya" 
-                    target="_blank"
-                  >
-                    Ali yun
                   </a>
                 </li>
               
@@ -264,14 +255,15 @@
 </blockquote>
 <p>So @jmurze implemented a [function]<br>(<a href="https://gist.github.com/jmurzy/0d62c0b5ea88ca806c16b5e8a16deb6a#file-foldview-transformutil-transformorigin-js" target="_blank" rel="noopener">https://gist.github.com/jmurzy/0d62c0b5ea88ca806c16b5e8a16deb6a#file-foldview-transformutil-transformorigin-js</a>)</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">transformOrigin</span>(<span class="params">matrix, origin</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; x, y, z &#125; = origin;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> translate = MatrixMath.createIdentityMatrix();</span><br><span class="line">  MatrixMath.reuseTranslate3dCommand(translate, x, y, z);</span><br><span class="line">  MatrixMath.multiplyInto(matrix, translate, matrix);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> untranslate = MatrixMath.createIdentityMatrix();</span><br><span class="line">  MatrixMath.reuseTranslate3dCommand(untranslate, -x, -y, -z);</span><br><span class="line">  MatrixMath.multiplyInto(matrix, matrix, untranslate);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>reuseTranslate3dCommand</code>, in the <a href="https://github.com/facebook/react-native/blob/a1ac2518a364ebcd3cc024a22229cadc1791e1c4/Libraries/Utilities/MatrixMath.js#L95" target="_blank" rel="noopener">react-native source code</a>, replace the 12th, 13th, 14th element in the matrix by parameters, z, y, z. </p>
-<p>This function called in <a href="https://github.com/facebook/react-native/blob/a1ac2518a364ebcd3cc024a22229cadc1791e1c4/Libraries/StyleSheet/processTransform.js#L79" target="_blank" rel="noopener">processTransform.js#L79</a> to archive <code>translation</code> in a view. </p>
+<p><code>reuseTranslate3dCommand</code>, in the <a href="https://github.com/facebook/react-native/blob/a1ac2518a364ebcd3cc024a22229cadc1791e1c4/Libraries/Utilities/MatrixMath.js#L95" target="_blank" rel="noopener">react-native source code</a>, replace the 12th, 13th, 14th element in the matrix by parameters, z, y, z to achieve <code>translation</code> effect. </p>
+<p>This function called in <a href="https://github.com/facebook/react-native/blob/a1ac2518a364ebcd3cc024a22229cadc1791e1c4/Libraries/StyleSheet/processTransform.js#L79" target="_blank" rel="noopener">processTransform.js#L79</a>, in which, RN generates a transform matrix based on <code>transform object</code> we provide. ()[<a href="https://github.com/facebook/react-native/blob/a1ac2518a364ebcd3cc024a22229cadc1791e1c4/Libraries/StyleSheet/processTransform.js#L43]" target="_blank" rel="noopener">https://github.com/facebook/react-native/blob/a1ac2518a364ebcd3cc024a22229cadc1791e1c4/Libraries/StyleSheet/processTransform.js#L43]</a></p>
 <h3 id="What-transformOrigin-does-is-to"><a href="#What-transformOrigin-does-is-to" class="headerlink" title="What transformOrigin does is to"></a>What <code>transformOrigin</code> does is to</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. translate the view by x, y, z on the x-axis, y-axis, z-axis </span><br><span class="line">2. apply rotation</span><br><span class="line">3. translate the view back by -x, -y, -z on the x-axis, y-axis, z-axis</span><br></pre></td></tr></table></figure>
 <h3 id="Plain-Code"><a href="#Plain-Code" class="headerlink" title="Plain Code"></a>Plain Code</h3><p>So, we can also use <code>transform</code> style to set the anchor point. For example, the following code sets the anchor point of the view as (0, 0.5). This will make the rotate base on the left side of the view. </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">const</span> transform = &#123;</span><br><span class="line">    transform: [</span><br><span class="line">        &#123;<span class="attr">translateX</span>: -w / <span class="number">2</span>&#125;, </span><br><span class="line">        rotateY, </span><br><span class="line">        &#123;<span class="attr">translateX</span>: w / <span class="number">2</span>&#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (   </span><br><span class="line">      &lt;Animated.View style=&#123;transform&#125;&gt;&lt;<span class="regexp">/Animated.View&gt;</span></span><br><span class="line"><span class="regexp">  )</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure>
 <h2 id="react-native-anchor-point"><a href="#react-native-anchor-point" class="headerlink" title="react-native-anchor-point"></a>react-native-anchor-point</h2><p>In this <a href="https://github.com/sueLan/react-native-anchor-point" target="_blank" rel="noopener">package</a>, I provides a function <code>withAnchorPoint</code>, to inject the above code into your <code>transform</code> object. It works well with the original way you use transform and. So, you don’t have to use <code>ref</code> to set the <code>transformOrigin</code> any more. This would make the <code>3d transform</code> in React Native easier to implement. </p>
 <p><img src="./rotateZ.gif" alt><br><img src="./rotateXY.gif" alt><br><img src="./rotate.gif" alt></p>
 <h2 id="Ref"><a href="#Ref" class="headerlink" title="Ref"></a>Ref</h2><ul>
+<li><a href="http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/" target="_blank" rel="noopener">Matrices</a></li>
 <li><a href="https://github.com/jmurzy/react-native-foldview" target="_blank" rel="noopener">react-native-foldview</a></li>
 <li><a href="https://stackoverflow.com/a/60632809/4026902" target="_blank" rel="noopener">RN How to set the anchor point of a view.</a></li>
 <li><a href="https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/geometry/geo-tran.html" target="_blank" rel="noopener">https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/geometry/geo-tran.html</a></li>
@@ -380,7 +372,7 @@
     
       <div class="nav-next">
         Nex Article:
-        <a href="/2020/05/15/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <a href="/2020/05/31/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
         <i class="iconfont icon-next"></i>
       </div>
     
