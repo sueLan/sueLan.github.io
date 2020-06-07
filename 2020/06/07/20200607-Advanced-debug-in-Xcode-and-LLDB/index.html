@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="RY">
+  
+  
+  
+  <title>Advanced debug in Xcode and LLDB | RY &#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="iOS,Debug,LLDB,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+
+  
+
+  
+    <link rel="icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js" async></script>
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">RY</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              Home
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              Archives
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          
+            <a 
+              href="/categories/"
+              target="_self"
+            >
+              Categories
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          
+            <a 
+              href="/tags/"
+              target="_self"
+            >
+              Tags
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          
+            <a 
+              href="/about/"
+              target="_self"
+            >
+              About
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>Me</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
+                    target="_blank"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
+                    Jian Shu
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>Advanced debug in Xcode and LLDB</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      post ime : 
+      2020-06-07
+    </span>
+    
+      <span>
+        category : 
+          <a href="/categories/iOS/">
+            iOS
+          </a>
+      </span>
+    
+    
+      <span>
+        read : <span class="article-timer" data-identity="20200607-Advanced-debug-in-Xcode-and-LLDB"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <h1 id="Advanced-debug-in-Xcode-and-LLDB"><a href="#Advanced-debug-in-Xcode-and-LLDB" class="headerlink" title="Advanced debug in Xcode and LLDB"></a>Advanced debug in Xcode and LLDB</h1><p><a href="https://developer.apple.com/videos/play/wwdc2018/412" target="_blank" rel="noopener">https://developer.apple.com/videos/play/wwdc2018/412</a> </p>
+<p>This session is awesome! </p>
+<h2 id="Configure-behaviors-to-dedicate-a-tab-for-debugging"><a href="#Configure-behaviors-to-dedicate-a-tab-for-debugging" class="headerlink" title="Configure behaviors to dedicate a tab for debugging"></a>Configure behaviors to dedicate a tab for debugging</h2><p>In <code>Prefernece</code> -&gt; <code>Behaviors</code> ,  we can custom the debugging tab for ourselves. For example, choose <code>Show tab named</code> , fill in the name and choose <code>active window</code> . We will have a independent debug tab. </p>
+<p><img src="412/image-20200601222857985.png" alt="image-20200601222857985"></p>
+<p><img src="media/15902152252875/image-20200607112605302.png" alt="image-20200607112605302" style="zoom:50%;"></p>
+<h2 id="LLDB-expressions-can-modify-program-state"><a href="#LLDB-expressions-can-modify-program-state" class="headerlink" title="LLDB expressions can modify program state"></a>LLDB expressions can modify program state</h2><p>By using  auto-continuing breakpoints with debugger commands to inject code live, you can inject expression, change state or logic without compiling the project.  </p>
+<p><strong>How to do it? </strong></p>
+<ul>
+<li><p>Click <code>Edit BreakPoint...</code></p>
+</li>
+<li><p>Click <code>add action</code> ; the default option is <code>Debugger Command</code>  we can write some <code>LLDB</code> command here</p>
+</li>
+<li><p>Choose the <code>Automatically continue</code>, it will not pause when trigger this breakpoint. </p>
+</li>
+</ul>
+<p>  <img src="media/15902152252875/image-20200607111532596.png" alt="image-20200607111532596" style="zoom:50%;"></p>
+<p><img src="media/15902152252875/image-20200601224246210.png" alt="image-20200601224246210" style="zoom:50%;"></p>
+<h2 id="Symbolic-Breakpoint"><a href="#Symbolic-Breakpoint" class="headerlink" title="Symbolic Breakpoint"></a>Symbolic Breakpoint</h2><p><code>Symbolic Breakpoint</code> is one of my favorite tools to debug issues caused by others’ framework.</p>
+<p>In the  <code>Breakpoint navigator</code> , choose <code>Symbolic Breakpoint</code> .  </p>
+<p><img src="412/image-20200607113135963.png" style="zoom:50%;"></p>
+<p>Fill in any signature of the <code>Objective-c</code> method you want. </p>
+<p><img src="412/image-20200607113105829.png" style="zoom:50%;"></p>
+<h2 id="“po-arg1”-arg2-etc-in-assembly-frames-to-print-function-arguments"><a href="#“po-arg1”-arg2-etc-in-assembly-frames-to-print-function-arguments" class="headerlink" title="“po $arg1” ($arg2, etc) in assembly frames to print function arguments"></a>“po $arg1” ($arg2, etc) in assembly frames to print function arguments</h2><p><img src="412/image-20200601224622911.png" style="zoom:50%;"></p>
+<p>In this case,  we use <code>Symbolic Breakpoint</code> to hit the <code>setText:</code> in <code>UILabe</code>, but we don’t have the source code of <code>UIKit</code>. When the method is hit, we are in an assembly frame, we can use <code>$arg</code> to inspect the parameters.  <code>$arg1</code> is <code>self</code> pointer. <code>$arg2</code> is the  <code>selector</code> of the method. Others are  arguements to the method. <a href="https://developer.apple.com/documentation/objectivec/1456712-objc_msgsend#parameters" target="_blank" rel="noopener">doc for objc_msgSend</a></p>
+<p><img src="media/15902152252875/image-20200601224723843.png" style="zoom: 50%;"></p>
+<p><strong>Noted</strong>:  we have to do typecast for the <code>$arg2</code> , which is a <code>Slector</code> . </p>
+<p><img src="media/15902152252875/image-20200601224918951.png" alt="image-20200601224918951" style="zoom:50%;"></p>
+<h2 id="Create-dependent-breakpoints-using-“breakpoint-set-–one-shot-true”"><a href="#Create-dependent-breakpoints-using-“breakpoint-set-–one-shot-true”" class="headerlink" title="Create dependent breakpoints using “breakpoint set –one-shot true”"></a>Create dependent breakpoints using “breakpoint set –one-shot true”</h2><p>If a Breakpoint is frequently hit, Like the above breakpoint <code>[UILabel setText:]</code>,  usually we will edit <code>conditions</code> for this breakpoint. And then, this <code>Breakppint</code> will be hit only when the expression for the condition is true.  However, when we don’t a property to make the <code>condition expression</code>.   There is another way.  We can add action <code>one-shot symbolic breakpoint</code> in <code>a specific breakpoint</code>, where it will be hit only once in the proper time. </p>
+<blockquote>
+<p> The one shot breakpoint is a temporary breakpoint that only exists until it’s triggered and then it’s automatically deleted.</p>
+</blockquote>
+<p><img src="media/15902152252875/image-20200607115734569.png" alt="image-20200607115734569" style="zoom:67%;"></p>
+<ul>
+<li>Set  a break point in line 96, where we might don’t want a break, but we can <code>configure this breakpoint</code> to actually set the <code>symbolic breakpoint</code> in UI label set text . </li>
+<li><p>choose <code>automatically continue</code> </p>
+</li>
+<li><p>Then add action , <code>breakpoint set --one-shot true --name &quot;[UILabel setText:]&quot;</code>.  This <code>one-shot symbolic breakpoint</code> is activated only after this breakpoint in line 96 is hit.  </p>
+</li>
+</ul>
+<p>How magical the dependent breakpoints are!</p>
+<h2 id="Skip-lines-of-code"><a href="#Skip-lines-of-code" class="headerlink" title="Skip lines of code"></a>Skip lines of code</h2><p>By <code>dragging</code> Instruction Pointer, the green handler in the following picture,  we can skip lines of code. It means, these lines of  code will not be executed. </p>
+<p><img src="media/15902152252875/image-20200607123358909.png" alt="image-20200607123358909"></p>
+<p>Or we can use <code>action</code> int the breakpoint to skip this line of code for us. </p>
+<p><img src="media/15902152252875/image-20200607123639829.png" alt="image-20200607123639829" style="zoom:50%;"></p>
+<p>After doing that, we can add <code>expression</code> to add new expressions, like calling other functions. </p>
+<p><img src="media/15902152252875/image-20200607123845152.png" alt="image-20200607123845152" style="zoom:50%;"></p>
+<h2 id="Pause-when-variables-are-modified-by-using-watchpoints"><a href="#Pause-when-variables-are-modified-by-using-watchpoints" class="headerlink" title="Pause when variables are modified by using watchpoints"></a>Pause when variables are modified by using watchpoints</h2><ul>
+<li>filter the variable we want using <code>fitler</code> </li>
+<li>click <code>Watch attempts</code> </li>
+</ul>
+<p><img src="412/image-20200607124534515.png" style="zoom:50%;"></p>
+<p>Then, we create a <code>Watchpoint</code> , which can be seen in the <code>breakpoint navigator</code></p>
+<p><img src="412/image-20200607124622132.png" style="zoom:50%;"></p>
+<h2 id="Evaluate-Obj-C-code-in-Swift-frames-with-expression-l-objc-O-lt-expr-gt"><a href="#Evaluate-Obj-C-code-in-Swift-frames-with-expression-l-objc-O-lt-expr-gt" class="headerlink" title="Evaluate Obj-C code in Swift frames with expression -l objc -O -- &lt;expr&gt;"></a>Evaluate Obj-C code in Swift frames with <code>expression -l objc -O -- &lt;expr&gt;</code></h2><p>In swift frames, we can’t use <code>pointers</code> or private func as we do in  obj-c frames. So here comes <code></code>expression -l objc -O – <expr>`.  This can help use them as we do in obj-c frames.  </expr></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// In swift</span><br><span class="line">expression -l objc -O -- [`self.view`  recursiveDescription]</span><br><span class="line"></span><br><span class="line">// In Obj-c </span><br><span class="line">[self.view  recursiveDescription]</span><br></pre></td></tr></table></figure>
+<p>By using the  <code>command alis</code> , we can short cut it. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">command alis poc expression -l -objc -O --</span><br></pre></td></tr></table></figure>
+<p><img src="media/15902152252875/image-20200607141219843.png" alt="image-20200607141219843"></p>
+<h2 id="Flush-view-changes-to-the-screen-using-“expression-CATransaction-flush-”"><a href="#Flush-view-changes-to-the-screen-using-“expression-CATransaction-flush-”" class="headerlink" title="Flush view changes to the screen using “expression CATransaction.flush()”"></a>Flush view changes to the screen using “expression CATransaction.flush()”</h2><h4 id="unsafeBitCast"><a href="#unsafeBitCast" class="headerlink" title="unsafeBitCast"></a>unsafeBitCast</h4><p>We can use <code>unsafeBitCast</code>  in Swift.  To do the type cast, we have to provide the correct type. </p>
+<p>Print its property or change its property: </p>
+<p><img src="media/15902152252875/image-20200607142019406.png" alt="image-20200607142019406"></p>
+<p>Use <code>CATransaction.flush</code> to apply the view module changes to the screen’s frame buffer. </p>
+<h2 id="Add-custom-LLDB-commands-using-aliases-and-scripts-Alias-examples"><a href="#Add-custom-LLDB-commands-using-aliases-and-scripts-Alias-examples" class="headerlink" title="Add custom LLDB commands using aliases and scripts. Alias examples:"></a>Add custom LLDB commands using aliases and scripts. Alias examples:</h2><ul>
+<li>download nudge LLDB script provided by the Apple. <a href="https://developer.apple.com/videos/play/wwdc2018/412/" target="_blank" rel="noopener">https://developer.apple.com/videos/play/wwdc2018/412/</a> </li>
+<li>Add to <code>~/.lldbinit</code></li>
+<li>Add  custom alias in the lldbinit</li>
+</ul>
+<p><img src="media/15902152252875/image-20200607143100209.png" alt="image-20200607143100209"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">command alias poc expression -l objc -O --</span><br><span class="line">command alias flush expression -l objc -- (void)[CATransaction flush]</span><br></pre></td></tr></table></figure>
+<h2 id="Customizing-Data-Formatters"><a href="#Customizing-Data-Formatters" class="headerlink" title="Customizing Data Formatters"></a>Customizing Data Formatters</h2><p><a href="https://developer.apple.com/videos/play/wwdc2019/429" target="_blank" rel="noopener">https://developer.apple.com/videos/play/wwdc2019/429</a></p>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          Author : RY Zheng <br/>
+        
+        Link : <a href="">https://suelan.github.io/2020/06/07/20200607-Advanced-debug-in-Xcode-and-LLDB/</a><br>
+        License : MIT
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">Buy me a cup of coffee</p>
+  
+  <button id="reward-btn">
+    
+    <span>赞赏 ☕️</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/img/donate.jpeg" alt="感谢鼓励">
+        <p class="qrcode-meta">感谢鼓励</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/Debug/">
+              #Debug
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/LLDB/">
+              #LLDB
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        Previous Article:
+        <a href="/2020/06/07/20200607-beyond-po/" target="_self">Beyond "po"</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        Nex Article:
+        <a href="/2020/06/07/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
+      appKey: "W9uovU160HsQkI3hQwlHgBqa",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+      To see a World in a Grain of Sand;And a Heaven in a Wild Flower; Hold Infinity in the palm of your hand; And Eternity in an hour
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2019, 2, 10).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>

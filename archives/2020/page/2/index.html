@@ -8,7 +8,7 @@
   
   
   
-  <title>RY &#39;s Blog</title>
+  <title>归档: 2020 | RY &#39;s Blog</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -204,288 +204,59 @@
   })
 </script>
 
-      
-
-
-
-
-
-
-
-
-<div class="container post-index">
-
+      <div class="container">
+  <div class="timeline">
+  <span class="archive-move-on"></span>
+  <span class="archive-page-counter">
+    
+      <span>Wow! 37 articles</span>
+    
+  </span>
   
-
-<div class="post">
-  <h1 class="article-title">
-    <span></span>
-  </h1>
-  <div class="article-top-meta">
-    <span>
-      post ime : 
-      2020-06-01
-    </span>
-    
-    
-      <span>
-        read : <span class="article-timer" data-identity="boostnote"></span>
-      </span>
-    
-  </div>
-
   
-
-  <div class="article-content">
-    <div class="markdown-body">
-      {"folders":[],"version":"1.0"}
+    <div class="collection-title">
+      <h2>
+        <span>2020</span>
+      </h2>
     </div>
-  </div>
   
-    <div class="copy-right">
-      <div class="markdown-body">
-        <blockquote>
-        
-        
-          Author : RY Zheng <br/>
-        
-        Link : <a href="">https://suelan.github.io/2020/06/01/React-Native-ExpoKit-Notification/boostnote/</a><br>
-        License : MIT
-        </blockquote>
+  
+  
+  <article class="posts-collapse">
+    <header>
+      <h2>
+        <a href="/2020/02/05/iOS-Simulator-from-the-Command-Line/">
+          <span>iOS Simulator from the Command Line</span>
+        </a>
+      </h2>
+      <div class="post-meta">
+        02-05
       </div>
-    </div>
+    </header>
+  </article>
   
   
-  
-    <div class="social-share"
-  style="margin-top: -2rem"
-  data-wechat-qrcode-title="<p>微信扫一扫</p>"
-  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
-   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
-  
->
-  <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
-</div>
-<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
-  
-
-  
-    <div id="reward">
-  
-    <p id="reward-meta">Buy me a cup of coffee</p>
-  
-  <button id="reward-btn">
-    
-    <span>赞赏 ☕️</span>
-  </button>
-  <div id="reward-qrcode">
-    
-      <div class="reward-qrcode--container">
-        <img class="qrcode-img" src="/img/donate.jpeg" alt="感谢鼓励">
-        <p class="qrcode-meta">感谢鼓励</p>
+  <article class="posts-collapse">
+    <header>
+      <h2>
+        <a href="/2020/01/21/onViewableItemsChanged/">
+          <span>Understand onViewableItemsChanged in FlatList</span>
+        </a>
+      </h2>
+      <div class="post-meta">
+        01-21
       </div>
-    
-  </div>
-
-</div>
-
-<script>
-  (() => {
-    let button = document.querySelector('#reward-btn'),
-      qrcode = document.querySelector('#reward-qrcode'),
-      display = false;
-    
-    button.addEventListener('click', () => {
-      qrcode.style.display = display ? 'none' : 'block'
-      display = !display
-    }, false)
-  })()
-</script>
+    </header>
+  </article>
   
-
-  <div class="article-footer">
-    <div class="article-meta pull-left">
-      <span>
-        
-      </span>
-    </div>
-    <div class="article-meta pull-right">
-    </div>
-  </div>
 </div>
-
-
-  <aside id="sidebar">
-    <p id="sidebar-header"></p>
-    <ol id="sidebar-toc"></ol>
-  </aside>
-  <script async>setTimeout(generateToc, 10);</script>
-
-
-  <nav class="post-navigation">
+  <nav class="page-navigation">
     
-      <div class="nav-pre">
-        <i class="iconfont icon-prev"></i>
-        Previous Article:
-        <a href="/2020/05/15/20200515-react-native-anchor-point/" target="_self">Anchor point for 3D Transform in React Native</a>
-      </div>
+      <a href="/archives/2020/">Previous</a>
     
     
   </nav>
-
-  
-    <a href="#comment" class="comment-anchor"></a>
-<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
-<div id="vcomments"></div>
-
-<script defer>
-  if( true ) {
-    let path = getRealPath()
-    new Valine({
-      el: "#vcomments",
-      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
-      appKey: "W9uovU160HsQkI3hQwlHgBqa",
-      notify: false,
-      verify: false,
-      avatar: "robohash",
-      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
-      path
-    });
-  }
-</script>
-   
-
-  
-    <script defer>
-const valineAPI = (() => {
-  try {
-    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
-  } catch(error) {}
-  const isExist = (identity) => {
-    identity = identity || getRealPath();
-    let query = new AV.Query('Timer');
-    return new Promise((resolve, reject) => {
-      query.equalTo("identity", identity);
-      query.find().then(results => {
-        resolve(results.length > 0);
-      }, error => reject(error));
-    })
-  }
-
-  const _get = (identity) => {
-    let query = null;
-    if(identity && identity instanceof Array){
-      let querys = [];
-      for(let i = 0; i < identity.length; ++i) {
-        querys[i] = new AV.Query('Timer');
-        querys[i].equalTo('identity', identity[i]);
-      }
-      query = AV.Query.or.apply(null ,querys);
-    } else {
-      identity = identity || getRealPath();
-      query = new AV.Query("Timer");
-      query.equalTo("identity", identity);
-    }
-
-    return new Promise((resolve, reject) => {
-      query.find()
-      .then(results => resolve(results))
-      .catch(error => reject(error))
-    })
-  }
-
-  const create = (identity) => {
-    identity = identity || getRealPath();
-    return new Promise((resolve, reject) => {
-      let Todo = AV.Object.extend('Timer');
-      let todo = new Todo();
-      todo.set("times", 1);
-      todo.set("identity", identity);
-      todo.save().then(res => resolve(true), error => reject(error));
-    })
-  }
-
-  const update = (identity) => {
-    identity = identity || getRealPath();
-    return new Promise((resolve, reject) => {
-      let query = new AV.Query('Timer');
-      query.equalTo("identity", identity);
-      query.find().then(todos => {
-        todos.forEach(todo => {
-          todo.set("times", todo.attributes.times + 1);
-        });
-        return AV.Object.saveAll(todos);
-      }).then(todos => resolve(true), error => reject(error));
-    })
-  }
-
-  return {
-    isExist,
-    _get,
-    update,
-    create
-  }
-})()
-
-const calcAndWriteTimes = () => {
-  let isPost = true;
-
-  let timerAllDOM = document.querySelectorAll(".article-timer");
-
-  if(isPost) {
-    let identity = timerAllDOM[0].getAttribute("data-identity");
-    valineAPI.isExist(identity)
-    .then(exist => {
-      if(exist) {
-        return valineAPI.update(identity);
-      }
-      return new Promise(resolve => resolve(true));
-    })
-    .then( succuess => valineAPI._get(identity))
-    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
-    .catch(error => console.log(error.message))
-    return ;
-  }
-
-  let timerDOMCache = {};
-
-  for(let timerDOM of timerAllDOM) {
-    let identity = timerDOM.getAttribute("data-identity");
-    if(timerDOMCache.hasOwnProperty(identity)){
-      timerDOMCache[identity].dom.push(timerDOM);
-    }else{
-      timerDOMCache[identity] = {
-        dom: [timerDOM],
-        times: undefined
-      };
-    }
-  }
-
-  let identities = Object.keys(timerDOMCache);
-  valineAPI._get(identities).then(results => {
-    for(let result of results) {
-      let {identity, times} = result.attributes;
-      timerDOMCache[identity].times = times;
-      timerDOMCache[identity].dom.map(item => item.innerText = times);
-    }
-    for(let identity of identities) {
-      if(timerDOMCache[identity].times){
-        continue;
-      }
-      timerDOMCache[identity].dom.map(item => item.innerText = 1);
-      valineAPI.create(identity);
-    }
-  }).catch(error => console.log(error.message))
-}
-
-if(true){
-  calcAndWriteTimes();
-}
-</script>
-   
-
 </div>
-
 
       <footer>
   <p class="site-info">
