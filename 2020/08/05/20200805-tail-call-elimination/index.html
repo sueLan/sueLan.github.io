@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="RY">
+  
+  
+  
+  <title>Tail Call Elimination in iOS | RY &#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="iOS,Debug,LLDB,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+
+  
+
+  
+    <link rel="icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js" async></script>
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">RY</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              Home
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              Archives
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          
+            <a 
+              href="/categories/"
+              target="_self"
+            >
+              Categories
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          
+            <a 
+              href="/tags/"
+              target="_self"
+            >
+              Tags
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          
+            <a 
+              href="/about/"
+              target="_self"
+            >
+              About
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>Me</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
+                    target="_blank"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
+                    Jian Shu
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>Tail Call Elimination in iOS</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      post ime : 
+      2020-08-05
+    </span>
+    
+      <span>
+        category : 
+          <a href="/categories/iOS/">
+            iOS
+          </a>
+      </span>
+    
+    
+      <span>
+        read : <span class="article-timer" data-identity="20200805-tail-call-elimination"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <h2 id="Basic-Knowledge"><a href="#Basic-Knowledge" class="headerlink" title="Basic Knowledge"></a>Basic Knowledge</h2><blockquote>
+<p>When functions (routines) call other functions (subroutines), they may need to pass arguments to them. The called subroutines access these arguments as <em>parameters</em>. Conversely, some subroutines pass a <em>result</em> or return value to their callers. In the ARMv6 environment, arguments may be passed on the runtime stack or in registers; in addition, some vector arguments are also passed passed in registers. Results are returned in registers or in memory. To efficiently pass values between callers and callees, GCC follows strict rules when it generates a program’s object code. - <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW8" target="_blank" rel="noopener">ARMv6</a></p>
+</blockquote>
+<h3 id="Registers"><a href="#Registers" class="headerlink" title="Registers"></a>Registers</h3><blockquote>
+<p>Processor operations mostly involve processing data. This data can be stored in memory and accessed from thereon. However, reading data from and storing data into memory slows down the processor, as it involves complicated processes of sending the data request across the control bus and into <code>the memory storage unit</code> and getting the data through the same channel. To speed up the processor operations, the processor includes some <code>internal memory storage locations</code>, called <strong>registers</strong>.</p>
+<p>The registers store data elements for processing without having to access the memory. A limited number of registers are built into the processor chip. – <a href="https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm" target="_blank" rel="noopener">https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm</a> </p>
+</blockquote>
+<p>In ARM 64, the following graph shows the registers’ roles.</p>
+<p><img src="image-20200805000244292.png" alt="image-20200805000244292"></p>
+<ul>
+<li>The first eight registers, r0-r7, are used to pass argument values into a subroutine and to return result values from a function. </li>
+<li>The frame record for the innermost frame (belonging to the most recent routine invocation) shall be pointed to by the <code>Frame Pointer register</code> (FP). The lowest addressed double-word shall point to the <code>previous frame record</code> and the highest addressed double-word shall contain the value passed in LR on entry to the current function. </li>
+</ul>
+<h3 id="Stack-Structure"><a href="#Stack-Structure" class="headerlink" title="Stack Structure"></a>Stack Structure</h3><blockquote>
+<p>The stack is a <code>contiguous area of memory</code> that may be used for storage of local variables and for passing additional arguments to subroutines when there are insufficient argument registers available.The stack implementation is <em>full-descending</em>, with <code>the current extent of the stack</code> held in the special-purpose register <code>SP</code>.   –<a href="https://developer.arm.com/documentation/ihi0055/b/" target="_blank" rel="noopener">Procedure Call Standard for the ARM 64-bit Architecture (AArch64)- AArch64 ABI release 1.0</a></p>
+</blockquote>
+<p>The ARM environment uses a stack that—at the point of function calls—is grows downward, and contains local variables and a function’s parameters. The stack is  aligned at the point of function calls.  Figure 1 shows the stack before and during a subroutine call. </p>
+<p><img src="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/art/arm_stack.jpg" alt="img"></p>
+<p> Stack frames contain the following areas:</p>
+<ul>
+<li><em>The parameter area</em> stores the arguments the caller passes to the called function or stores space for them, depending on the type of each argument and the availability of registers. This area resides in the caller’s stack frame.</li>
+<li><em>The linkage area</em> contains the address of the caller’s next instruction.</li>
+<li><em>The saved frame pointer</em> (optional) contains the base address of the caller’s stack frame.</li>
+<li>The <em>local storage area</em> contains the subroutine’s local variables and the values of the registers that must be restored before the called function returns. See <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW4" target="_blank" rel="noopener">Register Preservation</a> for details.</li>
+<li>The <em>saved registers area</em> contains the values of the registers that must be restored before the called function returns. See <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW4" target="_blank" rel="noopener">Register Preservation</a> for details.</li>
+</ul>
+<p>In this environment, the stack frame size is not fixed.</p>
+<p>Another stack frame layout graph comes from <a href="https://developer.arm.com/documentation/ihi0055/b/" target="_blank" rel="noopener">Procedure Call Standard for the ARM 64-bit Architecture (AArch64)- AArch64 ABI release 1.0</a></p>
+<p><img src="image-20200805222941420.png" alt="image-20200805222941420"></p>
+<h3 id="Passing-Arguments"><a href="#Passing-Arguments" class="headerlink" title="Passing Arguments"></a>Passing Arguments</h3><p>The base standard provides for passing arguments in general-purpose registers (r0-r7)</p>
+<h3 id="Returning-Results"><a href="#Returning-Results" class="headerlink" title="Returning Results"></a>Returning Results</h3><p>The manner in which a result is returned from a function is determined by the type of that result:</p>
+<ul>
+<li><p>If the type, <code>T,</code> of the result of a function is such that</p>
+<p><code>void func(T arg)</code><br> would require that <code>arg</code> be passed as a value in a register, then the result is returned in the same registers as would be used for such an argument.</p>
+</li>
+<li><p>Otherwise, <code>the caller shall reserve a block of memory of sufficient size and alignment to hold the result</code>. The address of the memory block shall be passed as an additional argument to the function in <code>x8</code>. <code>The callee may modify the result memory block</code> at any point during the execution of the subroutine (there is no requirement for the callee to preserve the value stored in x8).</p>
+</li>
+</ul>
+<h2 id="Tail-call-Elimination"><a href="#Tail-call-Elimination" class="headerlink" title="Tail call Elimination"></a>Tail call Elimination</h2><h3 id="Normal-Case"><a href="#Normal-Case" class="headerlink" title="Normal Case"></a>Normal Case</h3><p>Let’s say we have a method <code>drawRect</code>, which calls <code>CGContextDrawPath</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (void) drawRect: (NSRect) rect &#123;</span><br><span class="line">  // draw stuff</span><br><span class="line">  ...</span><br><span class="line">  CGContextDrawPath(_path, kCGStroke);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="./image-20200804224933284.png" alt="image-20200804224933284" style="zoom:50%;"></p>
+<p>The above picture is the stack right before UIKit calls the <code>drawRect</code> method. This graph comes from <a href="https://developer.apple.com/videos/play/wwdc2015/412/?time=729" target="_blank" rel="noopener">WWDC</a>. </p>
+<p>Here, <code>fp</code>  is the<a href="https://chortle.ccsu.edu/assemblytutorial/Chapter-28/ass28_4.html" target="_blank" rel="noopener"> frame pointer</a>  .<code>lr</code> is the <code>link register</code>, which holds the next instruction to execute in the caller function( routines) that called the current function(subroutines). So the current function, <code>subroutines</code> know how to return to its caller. </p>
+<p>When UIKit calls <code>drawRect</code>, firstly,  <code>drawRect</code> will establish its call frame by pushing the <code>return</code> address from the link registe(<code>lr</code> )and <code>previous value</code>of the frame pointer ( <code>frame Ptr</code>), on the stack. As we said before,  there are registers store these two data. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+0x00 push &#123;r4, r5, r6, fp, lr&#125;</span><br></pre></td></tr></table></figure>
+<p> the frame poniter, <code>fp</code> , will store a new address,  the value in <code>sp</code>  + 12. Then, <code>fp</code> will be set up on a new base just as the following graph shows. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+0x02 add fp, sp, #12</span><br></pre></td></tr></table></figure>
+<p><img src="./image-20200805094701153.png" alt="image-20200805094701153" style="zoom:50%;"></p>
+<p>Then, <code>drawRect</code> makes room for storing local variables,  and has its call frame on the stack. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+0x04 sub sp, #180</span><br></pre></td></tr></table></figure>
+<p><img src="./image-20200805094754924.png" alt="image-20200805094754924" style="zoom:50%;"></p>
+<p>Next, <code>drawRect</code> calls <code>CGContextDrawPath</code>,  which will also set up its call frame on the stack. </p>
+<p><img src="./image-20200805094818787.png" alt="image-20200805094818787" style="zoom:50%;"></p>
+<blockquote>
+<p><a href="https://developer.apple.com/videos/play/wwdc2015-412/?time=700" target="_blank" rel="noopener">The way time profiler works, it uses a service in the kernel </a><a href="https://developer.apple.com/videos/play/wwdc2015-412/?time=703" target="_blank" rel="noopener">that will sample what the CPUs are doing </a><a href="https://developer.apple.com/videos/play/wwdc2015-412/?time=705" target="_blank" rel="noopener">at about 1000x per second.</a>In this case, if we take a sample, we see that we’re running inside of context draw path.</p>
+<p><a href="https://developer.apple.com/videos/play/wwdc2015-412/?time=714" target="_blank" rel="noopener">Then the kernal looks at the frame Pointer register to see </a><a href="https://developer.apple.com/videos/play/wwdc2015-412/?time=718" target="_blank" rel="noopener">where the base of that function’s frame is </a><a href="https://developer.apple.com/videos/play/wwdc2015-412/?time=721" target="_blank" rel="noopener">and find the return address of who called it.</a> </p>
+</blockquote>
+<h3 id="Backtrace"><a href="#Backtrace" class="headerlink" title="Backtrace"></a>Backtrace</h3><p>So, what is Backtrace? Well,  by using frame pointer that was pushed on the stack,  we know the the base address of the caller’s stack frame. Since every call frame of the method has store the base address  of its caller’s stack frame, we can use this to go through the chain of the call frames in this stack.  </p>
+<p><img src="/image-20200805094837070.png" alt="image-20200805094837070" style="zoom:50%;"></p>
+<h3 id="Optimized-case"><a href="#Optimized-case" class="headerlink" title="Optimized case"></a>Optimized case</h3><p>In <code>drawRect</code>, after calling <code>CGContextDrawPath</code> , it is going to  <code>return</code>, which means actually it will <code>pop stack frame</code>, <code>restore fp</code>, and then <code>jump back to caller</code> . </p>
+<p><img src="image-20200805231739717.png" alt="image-20200805231739717" style="zoom:50%;"></p>
+<p>Since <code>CGContextDrawPath</code> needs nothing from <code>drawRect</code>, the params it needs arn’t from the call frame of <code>drawRect</code> , the compiler does an optimization here.  It rearranges the code as follow. I <code>pops stack frame</code> of <code>drawRect</code> firstly, <code>restores fp</code>,  then calls  <code>CGContextDrawPath</code> . So it doesn’t have to <code>jump back to caller</code>  , the address stored in the <code>lr</code> register. </p>
+<p>Figure 1. it is going to  <code>pops stack frame</code></p>
+<p><img src="image-20200805232447437.png" alt="image-20200805232447437"></p>
+<p>Figure 2. after  poping stack frame of <code>drawRect</code>, the call frame of drawRect doesn’t exist on the Stack any more.  Then <code>sp</code> moves.</p>
+<p><img src="image-20200805232642308.png" alt="image-20200805232642308"></p>
+<p>Figure 3. after restoring <code>fp</code> to the base address of its caller’s frame pointer, the <code>return address</code> and <code>frame ptr</code> of <code>drawRect</code> don’t exist on the Stack any more.  Then <code>sp</code> moves.</p>
+<p><img src="image-20200805232724011.png" alt="image-20200805232724011"></p>
+<p>Finally, it calls <code>CGContextDrawPath</code>, which establish its own call frame on the Stack. So, the stack is like this now. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+0x76 b.w &quot;CGContextDrawPath$shim&quot;</span><br></pre></td></tr></table></figure>
+<p><img src="image-20200805234014273.png" alt="image-20200805234014273" style="zoom:50%;"></p>
+<h3 id="The-difference-in-the-Call-Tree"><a href="#The-difference-in-the-Call-Tree" class="headerlink" title="The difference in the Call Tree"></a>The difference in the Call Tree</h3><p>The left side is the normal case, the right side is the optimized case where then call frame of <code>drawRect</code> will be removed from the stack in the optimized case. It looks like <code>CGContextDrawPath</code> is directedly called from <code>drawLayout:inContext</code> .</p>
+<p><img src="image-20200805234610955.png" alt="image-20200805234610955"></p>
+<h3 id="The-benifit-of-Tail-call-Elimination"><a href="#The-benifit-of-Tail-call-Elimination" class="headerlink" title="The benifit of Tail call Elimination"></a>The benifit of Tail call Elimination</h3><ul>
+<li>Saves stack memory </li>
+<li>Keeps caches hot, and reuses the memory</li>
+<li>Best for recursive function tail calls, especially <code>tail call recursive code</code>, where a function or method calls itself as the last line of code and then returns.  With Tail call Elimination, the stack won’t grow so much that we can get hight performances.</li>
+</ul>
+<h3 id="Disabling"><a href="#Disabling" class="headerlink" title="Disabling"></a>Disabling</h3><p>set this compiler flag when building,  you can get better call tree in the Time Profiler when profiling app. </p>
+<ul>
+<li>CFLAGS=“-fno-optimize-sibling-calls”</li>
+</ul>
+<h3 id="Call-Semantics"><a href="#Call-Semantics" class="headerlink" title="Call Semantics"></a>Call Semantics</h3><p>There is a useful trick to indentify if this is a Tail call Elimination case. That is to</p>
+<p><code>look at the disaeembly and call sight of the last call</code></p>
+<p><img src="image-20200806092252238.png" alt="image-20200806092252238"></p>
+<ul>
+<li><p>In normal call, it uses <code>a Branch and Link family of instructions</code> (bl)</p>
+<ul>
+<li><p>Sets <code>lr</code> to  next address and jumps to the caller</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Caller: +0x174 blx &quot;CGContextDrawPath $shim”</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>In optimized call, Tail Calls use <code>simple branches</code> (b) , directedly jump into the function</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Caller: +0x174 b.w &quot;CGContextDrawPath $shim”</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          Author : RY Zheng <br/>
+        
+        Link : <a href="">https://suelan.github.io/2020/08/05/20200805-tail-call-elimination/</a><br>
+        License : MIT
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">Buy me a cup of coffee</p>
+  
+  <button id="reward-btn">
+    
+    <span>赞赏 ☕️</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/img/donate.jpeg" alt="感谢鼓励">
+        <p class="qrcode-meta">感谢鼓励</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/Debug/">
+              #Debug
+            </a>
+          </span>
+          
+          <span class="span--tag">
+            <a href="/tags/LLDB/">
+              #LLDB
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        Previous Article:
+        <a href="/2020/07/05/20200705Behind-the-Scenes-of-the-•Xcode-Build-Process/" target="_self">Behind the Scenes of the Xcode Build Process</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        Nex Article:
+        <a href="/2020/08/06/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
+      appKey: "W9uovU160HsQkI3hQwlHgBqa",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+      To see a World in a Grain of Sand;And a Heaven in a Wild Flower; Hold Infinity in the palm of your hand; And Eternity in an hour
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2019, 2, 10).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>
