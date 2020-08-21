@@ -245,10 +245,7 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <h2 id="Basic-Knowledge"><a href="#Basic-Knowledge" class="headerlink" title="Basic Knowledge"></a>Basic Knowledge</h2><blockquote>
-<p>When functions (routines) call other functions (subroutines), they may need to pass arguments to them. The called subroutines access these arguments as <em>parameters</em>. Conversely, some subroutines pass a <em>result</em> or return value to their callers. In the ARMv6 environment, arguments may be passed on the runtime stack or in registers; in addition, some vector arguments are also passed passed in registers. Results are returned in registers or in memory. To efficiently pass values between callers and callees, GCC follows strict rules when it generates a program’s object code. - <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW8" target="_blank" rel="noopener">ARMv6</a></p>
-</blockquote>
-<h3 id="Registers"><a href="#Registers" class="headerlink" title="Registers"></a>Registers</h3><blockquote>
+      <h2 id="Basic-Knowledge"><a href="#Basic-Knowledge" class="headerlink" title="Basic Knowledge"></a>Basic Knowledge</h2><h3 id="Registers"><a href="#Registers" class="headerlink" title="Registers"></a>Registers</h3><blockquote>
 <p>Processor operations mostly involve processing data. This data can be stored in memory and accessed from thereon. However, reading data from and storing data into memory slows down the processor, as it involves complicated processes of sending the data request across the control bus and into <code>the memory storage unit</code> and getting the data through the same channel. To speed up the processor operations, the processor includes some <code>internal memory storage locations</code>, called <strong>registers</strong>.</p>
 <p>The registers store data elements for processing without having to access the memory. A limited number of registers are built into the processor chip. – <a href="https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm" target="_blank" rel="noopener">https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm</a> </p>
 </blockquote>
@@ -274,7 +271,10 @@
 <p>In this environment, the stack frame size is not fixed.</p>
 <p>Another stack frame layout graph comes from <a href="https://developer.arm.com/documentation/ihi0055/b/" target="_blank" rel="noopener">Procedure Call Standard for the ARM 64-bit Architecture (AArch64)- AArch64 ABI release 1.0</a></p>
 <p><img src="image-20200805222941420.png" alt="image-20200805222941420"></p>
-<h3 id="Passing-Arguments"><a href="#Passing-Arguments" class="headerlink" title="Passing Arguments"></a>Passing Arguments</h3><p>The base standard provides for passing arguments in general-purpose registers (r0-r7)</p>
+<h3 id="Passing-Arguments"><a href="#Passing-Arguments" class="headerlink" title="Passing Arguments"></a>Passing Arguments</h3><blockquote>
+<p>When functions (routines) call other functions (subroutines), they may need to pass arguments to them. The called subroutines access these arguments as <em>parameters</em>. Conversely, some subroutines pass a <em>result</em> or return value to their callers. In the ARMv6 environment, arguments may be passed on the runtime stack or in registers; in addition, some vector arguments are also passed passed in registers. Results are returned in registers or in memory. To efficiently pass values between callers and callees, GCC follows strict rules when it generates a program’s object code. - <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW8" target="_blank" rel="noopener">ARMv6</a></p>
+</blockquote>
+<p>The base standard provides for passing arguments in general-purpose registers (r0-r7)</p>
 <h3 id="Returning-Results"><a href="#Returning-Results" class="headerlink" title="Returning Results"></a>Returning Results</h3><p>The manner in which a result is returned from a function is determined by the type of that result:</p>
 <ul>
 <li><p>If the type, <code>T,</code> of the result of a function is such that</p>
@@ -452,7 +452,7 @@
     
       <div class="nav-next">
         Nex Article:
-        <a href="/2020/08/06/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <a href="/2020/08/18/20200817-address-sanitizer/" target="_self">Address Sanitizer</a>
         <i class="iconfont icon-next"></i>
       </div>
     
