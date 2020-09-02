@@ -312,7 +312,7 @@
 <h2 id="Clang-compiler"><a href="#Clang-compiler" class="headerlink" title="Clang compiler"></a><a href="https://clang.llvm.org/" target="_blank" rel="noopener">Clang compiler</a></h2><h3 id="Header-map"><a href="#Header-map" class="headerlink" title="Header map"></a>Header map</h3><blockquote>
 <p><code>Header map</code> is used by the Xcode build system to know where the header files are.</p>
 </blockquote>
-<p>In Objective-C, a header file is a promise, saying that the implementation exists somewhere else. If you only update the <code>header</code> file, adding a new function A,  without implementation of the function in <code>m</code> file, you broke your promise. Then you use function A in class B.   This doesn’t break during compile time, because compiler trusts the promise, saying that there is a function A symbole exists, but during link,  we usually got <code>symbol undefined</code> error. </p>
+<p>In Objective-C, a header file is a promise, saying that the implementation exists somewhere else. If you only update the <code>header</code> file, adding a new function A,  without implementation of the function in <code>m</code> file, you broke your promise. Then you use function A in class B.   This doesn’t break during compile time, because compiler trusts the promise, saying that there is a function A symbol exists, but during link,  we usually got <code>symbol undefined</code> error. </p>
 <h3 id="1-How-does-Clang-find-your-header-files"><a href="#1-How-does-Clang-find-your-header-files" class="headerlink" title="1. How does Clang find your header files?"></a>1. How does Clang find your header files?</h3><p>We can copy the arguments from the Xcode building log when Clang compiles a single <code>.m</code> file, then using command line to see more details. </p>
 <p><img src="image-20200705234147883.png" alt="image-20200705234147883" style="zoom:50%;"></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clang &lt;list of arguments&gt; -c Cat.mm -o Cat.o -v</span><br></pre></td></tr></table></figure>
@@ -321,11 +321,9 @@
 <p><img src="image-20200705234528306.png" alt="image-20200705234528306" style="zoom:50%;"></p>
 <h4 id="What-are-header-maps"><a href="#What-are-header-maps" class="headerlink" title="What are header maps"></a>What are header maps</h4><p><img src="image-20200705234700573.png" alt="image-20200705234700573" style="zoom:50%;"></p>
 <p>In the header map, for the first two keys <code>PetKit.h</code> and <code>Cat.h</code> , it just simply append the framework name, make them as <code>PetKit/PetKit.h</code> and <code>PetKit/Cat.h</code>. This keep existing projects working when you use <code>import &lt;Cat.h&gt;</code> or <code>import Cat.h</code>,  but there might be issues down the road with Clang modules.  So it is recommended that you always <code>specify the framework name</code> when you include a public or private header file from your own framework. </p>
-<h4 id="Suggestions"><a href="#Suggestions" class="headerlink" title="Suggestions:"></a>Suggestions:</h4><ul>
-<li><p>Always explicit a framework name when you introduce a public and private header </p>
-</li>
-<li><p>always add the header to the project </p>
-</li>
+<h4 id="Suggestion-for-importing-headers-explicitly-in-your-source-code-to-help-Clang-find-the-header"><a href="#Suggestion-for-importing-headers-explicitly-in-your-source-code-to-help-Clang-find-the-header" class="headerlink" title="Suggestion for importing headers explicitly in your source code to help Clang find the header:"></a>Suggestion for importing headers explicitly in your source code to help Clang find the header:</h4><ul>
+<li>Always explicit a framework name when you introduce a public and private header </li>
+<li>always add the header to the project </li>
 <li>Always use unique name for header avoid shadowing other headers </li>
 </ul>
 <h3 id="2-How-does-Clang-find-system-header-files"><a href="#2-How-does-Clang-find-system-header-files" class="headerlink" title="2. How does Clang find system header files?"></a>2. How does Clang find system header files?</h3><p><code>Headermap</code> is only for developers’ code. So, in the case of finding system header files, Clang focus on two directories. </p>
@@ -391,11 +389,11 @@
 </li>
 </ul>
 <h3 id="Generating-interface"><a href="#Generating-interface" class="headerlink" title="Generating interface"></a>Generating interface</h3><ul>
-<li><p>check how your Objective-C header will be imported into Swift</p>
+<li><p>How your Objective-C header will be imported into Swift</p>
 <p>In this <code>PetViewController.h</code>, you use the button in the top-left corner of the source editor, see <code>generated interface</code>. </p>
 <p><img src="image-20200710110626097.png" alt="image-20200710110626097"></p>
 </li>
-<li><p>To use Swfit in Objective-C </p>
+<li><p>To use Swift in Objective-C </p>
 <p><img src="image-20200710112907949.png" alt="image-20200710112907949"></p>
 <ul>
 <li>For classes extending NSObject and methods/properties marked <code>@objc</code></li>
@@ -405,7 +403,7 @@
 <li>You can also use <code>@objc(Name</code>) to provide custom name — but must not conflict!</li>
 </ul>
 </li>
-<li><p>To use in other Swift targets</p>
+<li><p>To use Swift in other Swift targets</p>
 <ul>
 <li><p>Must firstly import other modules to see their declarations, because in Swift, a module is a distributable unit of declarations.</p>
 </li>
@@ -413,14 +411,20 @@
 </li>
 <li><p>In Xcode each <code>Swift target</code> produces <code>a separate module</code>, so your app target does.</p>
 </li>
-<li><p>Serialized, binary representation of module’s declarations, which will be deserialised by compiler  to check the types when you use them. So this <code>swfitmodule</code> is a bit like <code>like a generated Objective-C header</code>. But instead of text, it’s a binary representation. Besides, it does include the names and types of <code>private declarations</code> so that we can refer to them in the debugger. In addition, it includes the <code>bodies of inlineable</code>functions<code>,  like</code>static inline function`s in Objective-C  header</p>
-<p><img src="image-20200710113202143.png" alt="image-20200710113202143"> </p>
+</ul>
 </li>
 </ul>
-<p><img src="image-20200709100603559.png" alt="image-20200709100603559"></p>
-<p> For incremental builds, the compiler produces partial Swift module files and then <code>merges</code> them into a single <code>swift module</code> file, and  a single Objective-C header. </p>
-</li>
+<h3 id="swfitmodule-vs-header"><a href="#swfitmodule-vs-header" class="headerlink" title="swfitmodule vs header"></a>swfitmodule vs header</h3><p>  <code>swfitmodule</code> file is serialized, binary representation of module’s declarations, which will be deserialised by compiler  to check the types when you use them. So this <code>swfitmodule</code> is a bit like <code>like a generated Objective-C header</code>. But instead of text, it’s a binary representation. Besides, it does include the names and types of <code>private declarations</code> so that we can refer to them in the debugger. In addition, it includes the <code>bodies of inlineable</code>functions<code>,  like</code>static inline function`s in Objective-C  header</p>
+<pre><code>![image-20200710113202143](image-20200710113202143.png) 
+</code></pre><p>  <img src="image-20200709100603559.png" alt="image-20200709100603559"></p>
+<p>   For incremental builds, the compiler produces partial Swift module files and then <code>merges</code> them into a single <code>swift module</code> file, and  a single Objective-C header. </p>
+<h3 id="In-summary"><a href="#In-summary" class="headerlink" title="In summary:"></a>In summary:</h3><ul>
+<li>Swift uses Objective-C declarations by Bridging header.</li>
+<li>Objective-C uses Swift declarations by Generated header.</li>
+<li>In Objective-C Clang find where the header file is by header map files.  </li>
+<li>In Swift, <code>swfitmodule</code> is a bit like like a generated Objective-C header</li>
 </ul>
+<p><img src="generated_header.png" alt></p>
 <h2 id="Linker"><a href="#Linker" class="headerlink" title="Linker"></a>Linker</h2><h3 id="What-is-Linker"><a href="#What-is-Linker" class="headerlink" title="What is Linker?"></a>What is Linker?</h3><p>Linking is the final task in building an executable Mach-O. What it does it to combine the output of all compiler invocations into a executable. </p>
 <p>Take two kinds of input files </p>
 <ul>
