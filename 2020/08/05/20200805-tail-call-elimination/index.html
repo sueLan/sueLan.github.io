@@ -245,7 +245,10 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <h2 id="Basic-Knowledge"><a href="#Basic-Knowledge" class="headerlink" title="Basic Knowledge"></a>Basic Knowledge</h2><h3 id="Registers"><a href="#Registers" class="headerlink" title="Registers"></a>Registers</h3><blockquote>
+      <blockquote>
+<p>Tail call optimization, callee reusing the stack of the caller, is currently supported on x86/x86-64, PowerPC, and WebAssembly. It is performed on x86/x86-64 and PowerPC - <a href="http://llvm.org/docs/CodeGenerator.html#tail-call-optimization" target="_blank" rel="noopener">lldb</a></p>
+</blockquote>
+<h2 id="Basic-Knowledge"><a href="#Basic-Knowledge" class="headerlink" title="Basic Knowledge"></a>Basic Knowledge</h2><h3 id="Registers"><a href="#Registers" class="headerlink" title="Registers"></a>Registers</h3><blockquote>
 <p>Processor operations mostly involve processing data. This data can be stored in memory and accessed from thereon. However, reading data from and storing data into memory slows down the processor, as it involves complicated processes of sending the data request across the control bus and into <code>the memory storage unit</code> and getting the data through the same channel. To speed up the processor operations, the processor includes some <code>internal memory storage locations</code>, called <strong>registers</strong>.</p>
 <p>The registers store data elements for processing without having to access the memory. A limited number of registers are built into the processor chip. – <a href="https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm" target="_blank" rel="noopener">https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm</a> </p>
 </blockquote>

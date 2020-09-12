@@ -257,8 +257,34 @@
 <p>The <code>.cfi_startproc</code> directive is used at the beginning of most functions. CFI is short for Call Frame Information. A <em>frame</em> corresponds loosely to a function. When you use the debugger and <em>step in</em> or <em>step out</em>, you’re actually stepping in/out of call frames. In C code, functions have their own call frames, but other things can too. The <code>.cfi_startproc</code> directive gives the function an entry into <code>.eh_frame</code>, which contains unwind information – this is how exception can unwind the call frame stack. The directive will also emit architecture-dependent instructions for CFI. It’s matched by a corresponding <code>.cfi_endproc</code> further down in the output to mark the end of our <code>main()</code> function.  – <a href="https://www.objc.io/issues/6-build-tools/mach-o-executables/" target="_blank" rel="noopener">https://www.objc.io/issues/6-build-tools/mach-o-executables/</a> </p>
 </blockquote>
 <h3 id="SP-and-stack"><a href="#SP-and-stack" class="headerlink" title="SP and stack"></a>SP and stack</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sub	sp, sp, #48             ; =48</span><br></pre></td></tr></table></figure>
-<p>It sets up a call frame on the stack. in AArch64 the stack-pointer must be 128-bit aligned; here is 48*8-bit.</p>
+<p>It sets up a call frame on the stack. Here <code>sp</code> refers to the register for stack-pointer. In AArch64 the stack-pointer must be 128-bit aligned; here is 48*8-bit.</p>
 <p><img src="image-20200807093341883.png" alt="image-20200807093341883"></p>
+<h4 id="Registers"><a href="#Registers" class="headerlink" title="Registers"></a>Registers</h4><blockquote>
+<p>Processor operations mostly involve processing data. This data can be stored in memory and accessed from thereon. However, reading data from and storing data into memory slows down the processor, as it involves complicated processes of sending the data request across the control bus and into <code>the memory storage unit</code> and getting the data through the same channel. To speed up the processor operations, the processor includes some <code>internal memory storage locations</code>, called <strong>registers</strong>.</p>
+<p>The registers store data elements for processing without having to access the memory. A limited number of registers are built into the processor chip. – <a href="https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm" target="_blank" rel="noopener">https://www.tutorialspoint.com/assembly_programming/assembly_registers.htm</a> </p>
+</blockquote>
+<p>In ARM 64, the following graph shows the registers’ roles.</p>
+<p><img src="image-20200805000244292.png" alt="image-20200805000244292"></p>
+<ul>
+<li>The first eight registers, r0-r7, are used to pass argument values into a subroutine and to return result values from a function. </li>
+<li>The frame record for the innermost frame (belonging to the most recent routine invocation) shall be pointed to by the <code>Frame Pointer register</code> (FP). The lowest addressed double-word shall point to the <code>previous frame record</code> and the highest addressed double-word shall contain the value passed in LR on entry to the current function. </li>
+</ul>
+<h4 id="Stack-Structure"><a href="#Stack-Structure" class="headerlink" title="Stack Structure"></a>Stack Structure</h4><blockquote>
+<p>The stack is a <code>contiguous area of memory</code> that may be used for storage of local variables and for passing additional arguments to subroutines when there are insufficient argument registers available.The stack implementation is <em>full-descending</em>, with <code>the current extent of the stack</code> held in the special-purpose register <code>SP</code>.   –<a href="https://developer.arm.com/documentation/ihi0055/b/" target="_blank" rel="noopener">Procedure Call Standard for the ARM 64-bit Architecture (AArch64)- AArch64 ABI release 1.0</a></p>
+</blockquote>
+<p>The ARM environment uses a stack that—at the point of function calls—is grows downward, and contains local variables and a function’s parameters. The stack is  aligned at the point of function calls.  Figure 1 shows the stack before and during a subroutine call. </p>
+<p><img src="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/art/arm_stack.jpg" alt="img"></p>
+<p> Stack frames contain the following areas:</p>
+<ul>
+<li><em>The parameter area</em> stores the arguments the caller passes to the called function or stores space for them, depending on the type of each argument and the availability of registers. This area resides in the caller’s stack frame.</li>
+<li><em>The linkage area</em> contains the address of the caller’s next instruction.</li>
+<li><em>The saved frame pointer</em> (optional) contains the base address of the caller’s stack frame.</li>
+<li>The <em>local storage area</em> contains the subroutine’s local variables and the values of the registers that must be restored before the called function returns. See <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW4" target="_blank" rel="noopener">Register Preservation</a> for details.</li>
+<li>The <em>saved registers area</em> contains the values of the registers that must be restored before the called function returns. See <a href="https://developer.apple.com/library/archive/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW4" target="_blank" rel="noopener">Register Preservation</a> for details.</li>
+</ul>
+<p>In this environment, the stack frame size is not fixed.</p>
+<p>Another stack frame layout graph comes from <a href="https://developer.arm.com/documentation/ihi0055/b/" target="_blank" rel="noopener">Procedure Call Standard for the ARM 64-bit Architecture (AArch64)- AArch64 ABI release 1.0</a></p>
+<p><img src="image-20200805222941420.png" alt="image-20200805222941420"></p>
 <p>About stack and stack pointer, see more in. </p>
 <ul>
 <li><a href="https://community.arm.com/developer/ip-products/processors/b/processors-ip-blog/posts/using-the-stack-in-aarch32-and-aarch64" target="_blank" rel="noopener">Using the Stack in AArch32 and AArch64</a></li>
@@ -451,7 +477,7 @@
     
       <div class="nav-next">
         Nex Article:
-        <a href="/2020/09/03/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <a href="/2020/09/12/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
         <i class="iconfont icon-next"></i>
       </div>
     
