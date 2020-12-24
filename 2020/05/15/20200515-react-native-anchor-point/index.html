@@ -245,7 +245,8 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      <h2 id="What-is-Anchor-Point"><a href="#What-is-Anchor-Point" class="headerlink" title="What is Anchor Point"></a>What is Anchor Point</h2><p>Web developers may be familiar with <code>transform-origin</code> in css. While in iOS, there is something similar called <code>anchor point</code>. </p>
+      <p>In react-native, sometimes, you may want to rotate a view basing one a specific point instead of the center of the view. Like the cube animation in the instagram stories. Some people think you need a extra <code>transformZ</code> property to achieve that. But, actually, you don’t need that. What you need is <code>Anchor Point</code>. </p>
+<h2 id="What-is-Anchor-Point"><a href="#What-is-Anchor-Point" class="headerlink" title="What is Anchor Point"></a>What is Anchor Point</h2><p>Web developers may be familiar with <code>transform-origin</code> in css. While in iOS, there is something similar called <code>anchor point</code>. </p>
 <p><code>Anchor point</code> in a view is a point in the unit coordinate space, about which all geometric manipulations to the view occur. </p>
 <blockquote>
 <p>Defines the anchor point of the layer’s bounds rectangle. Animatable.<br>You specify the value for this property using the unit coordinate space. The default value of this property is (0.5, 0.5), which represents the center of the layer’s bounds rectangle. <code>All geometric manipulations to the view occur about the specified point</code>. For example, applying a rotation transform to a layer with the default anchor point causes the layer to rotate around its center. Changing the anchor point to a different location would cause the layer to rotate around that new point.                – <a href="https://developer.apple.com/documentation/quartzcore/calayer/1410817-anchorpoint" target="_blank" rel="noopener">Apple dev</a></p>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="RY">
+  
+  
+  
+  <title>What is behind react native module | RY &#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="React Native,iOS,Dive into React Native,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+
+  
+
+  
+    <link rel="icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js" async></script>
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">RY</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              Home
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              Archives
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          
+            <a 
+              href="/categories/"
+              target="_self"
+            >
+              Categories
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          
+            <a 
+              href="/tags/"
+              target="_self"
+            >
+              Tags
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          
+            <a 
+              href="/about/"
+              target="_self"
+            >
+              About
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>Me</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
+                    target="_blank"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
+                    Jian Shu
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>What is behind react native module</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      post ime : 
+      2020-12-23
+    </span>
+    
+      <span>
+        category : 
+          <a href="/categories/React-Native/">
+            React Native
+          </a>
+      </span>
+    
+    
+      <span>
+        read : <span class="article-timer" data-identity="20201223-what-is-behind-react-native-module"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <p><a href="https://reactnative.dev/docs/native-modules-ios" target="_blank" rel="noopener">Native Modules</a> is one of the key part of React Native which enables JavasScript to call methods in iOS or Android native implementation.</p>
+<p> It is quite interesting to explore the source code about native modules in react native repo. In this article, I would like to talk something about how React Native register, initialize native modules and what is behind the method calling from JavaScript side to iOS Objective-C modules. </p>
+<p>First of all, let’s take look at <a href="https://github.com/facebook/react-native/blob/23717e48aff3d7fdaea30c9b8dcdd6cfbb7802d5/React/Base/RCTBridgeModule.h#L63" target="_blank" rel="noopener">RCTBridgeModule`</a> , which is a protocol provides interface needed to register a bridge module.   </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#define RCT_EXPORT_MODULE(js_name)  </span><br><span class="line">#define RCT_EXPORT_METHOD(method)</span><br><span class="line">+ (NSString *)moduleName;</span><br><span class="line"></span><br><span class="line">@optional</span><br><span class="line">+ (BOOL)requiresMainQueueSetup;</span><br></pre></td></tr></table></figure>
+<h2 id="Export-and-Register-Modules"><a href="#Export-and-Register-Modules" class="headerlink" title="Export and Register Modules"></a>Export and Register Modules</h2><p><code>RCT_EXPORT_MODULE</code> is in <code>RCTBridgeModule</code> protocol, You can use this macro to export your iOS module. </p>
+<blockquote>
+<p>Place this macro in your class implementation to automatically register your module with the bridge when it loads. The optional js_name argument. It will be used as the JS module name. If omitted, the JS module name will match the Objective-C class name.</p>
+</blockquote>
+<p>For example, <code>RCT_EXPORT_MODULE</code> is used in <a href="https://github.com/react-native-async-storage/async-storage/blob/bfd76c7508bcc35d88f6b6c8d2fd525466f77ba0/ios/RNCAsyncStorage.m#L404" target="_blank" rel="noopener">RNCAsyncStorage.m#L404, react-native-async-storage</a>.</p>
+<p>This macro will be replaced by the following code in the preprocessor phase when you are compiling a source file. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">RCT_EXTERN void RCTRegisterModule(Class); </span><br><span class="line">+ (NSString *)moduleName &#123; return @#js_name; &#125; </span><br><span class="line">+ (void)load &#123; RCTRegisterModule(self); &#125;</span><br></pre></td></tr></table></figure>
+<p>In Objc world, <code>load</code> method is invoked whenever a class is added to the Objective-C runtime at the very beginning of app launch. At this time, it invokes <code>RCTRegisterModule</code> function to add the class object into the  <code>RCTModuleClasses</code> array. <code>RCTModuleClasses</code> is an array containing a list of registered classes.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">void RCTRegisterModule(Class moduleClass)</span><br><span class="line">&#123;</span><br><span class="line">  static dispatch_once_t onceToken;</span><br><span class="line">  dispatch_once(&amp;onceToken, ^&#123;</span><br><span class="line">    RCTModuleClasses = [NSMutableArray new];</span><br><span class="line">    RCTModuleClassesSyncQueue =</span><br><span class="line">        dispatch_queue_create(&quot;com.facebook.react.ModuleClassesSyncQueue&quot;, DISPATCH_QUEUE_CONCURRENT);</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  RCTAssert(</span><br><span class="line">      [moduleClass conformsToProtocol:@protocol(RCTBridgeModule)],</span><br><span class="line">      @&quot;%@ does not conform to the RCTBridgeModule protocol&quot;,</span><br><span class="line">      moduleClass);</span><br><span class="line"></span><br><span class="line">  // Register module</span><br><span class="line">  dispatch_barrier_async(RCTModuleClassesSyncQueue, ^&#123;</span><br><span class="line">    [RCTModuleClasses addObject:moduleClass];</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>When adding current module class into <code>RCTModuleClasses</code> array,  it uses <code>dispatch_barrier_async</code>  to dispatch this task to a concurrent queue, <code>RCTModuleClassesSyncQueue</code>. Using  <code>dispatch_barrier_async</code> makes sure that<br>one async block executing at a time in <code>RCTModuleClassesSyncQueue</code>. </p>
+<p>As we mentioned just now,  <code>RCTModuleClasses</code> is a global array containing a list of registered classes.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Printing description of RCTModuleClasses:</span><br><span class="line">&lt;__NSArrayM 0x7fe4dc5d6bb0&gt;(</span><br><span class="line">....</span><br><span class="line">RNSVGTSpanManager,</span><br><span class="line">RNSVGUseManager,</span><br><span class="line">RCTBaseTextViewManager,</span><br><span class="line">RCTTextViewManager,</span><br><span class="line">RNLinearTextGradientViewManager,</span><br><span class="line">RCTVirtualTextViewManager,</span><br><span class="line">RNVirtualLinearTextGradientViewManager,</span><br><span class="line">RCTAccessibilityManager,</span><br><span class="line">RCTActionSheetManager,</span><br><span class="line">RCTActivityIndicatorViewManager,</span><br><span class="line">RCTAlertManager,</span><br><span class="line">.....</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h2 id="Register-and-Initialize-Modules"><a href="#Register-and-Initialize-Modules" class="headerlink" title="Register and Initialize Modules"></a>Register and Initialize Modules</h2><ol>
+<li><p><strong>Modules in <code>RCTModuleClasses</code> are registered and initialized in <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L364" target="_blank" rel="noopener">start</a>  phase in <code>RCTCxxBridge.mm</code></strong>.  In <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L854" target="_blank" rel="noopener">initializeModules:withDispatchGroup:lazilyDiscovered</a>, react native firstly registers all these <code>automatically-exported</code> modules.<a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L854" target="_blank" rel="noopener">code here</a>; then store them  into array <code>_moduleClassesByID</code>, a bunch of pointers to <code>Class</code> objects, and <code>_moduleDataByID</code> referring to a bunch of <code>RCTModuleData</code> object. <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L727" target="_blank" rel="noopener">code here</a>. The back trace for module registering is as follow: </p>
+<p><img src="image-20201001142132537.png" alt="image-20201001142132537"></p>
+</li>
+<li><p><strong>If the module needs to be set up in <code>main</code> thread. It will be guaranteed running in Main thread</strong>. <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L877" target="_blank" rel="noopener">code here</a> and <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L935" target="_blank" rel="noopener">here</a>.  It makes sense that <a href="https://reactnative.dev/docs/native-modules-ios#implementing--requiresmainqueuesetup" target="_blank" rel="noopener">react native doc</a> suggests us return <code>NO</code> in the <code>requiresMainQueueSetup</code> method.</p>
+</li>
+</ol>
+<blockquote>
+<p>If your module does not require access to UIKit, then you should respond to <code>+ requiresMainQueueSetup</code> with <code>NO</code>.</p>
+</blockquote>
+<ol start="3">
+<li>When the <code>RNBridge</code> is initialized. It inits the <code>RCTCxxBridge</code> and <code>starts</code> it as current bridge.<code>RNBridge</code> in Objc realm basically is a wrapper of <code>RCTCxxBridge.mm</code>. At that time, RN <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L738" target="_blank" rel="noopener">registers extra modules</a>. </li>
+</ol>
+<p>Just as what  <a href="https://medium.com/u/b25eae7ad28?source=post_page-----9bb82659792c--------------------------------" target="_blank" rel="noopener"><em>Lorenzo S.</em></a> shared in this  <a href="https://www.youtube.com/watch?v=7gm0owyO8HU" target="_blank" rel="noopener">talk</a> . The initialization of all modules in <code>RCTCxxBridge</code> start phase slows down its launch time. The more native module you have, the longer time it takes to initialize these modules even you won’t use them on the first page. </p>
+<h2 id="Store-modules"><a href="#Store-modules" class="headerlink" title="Store modules"></a>Store modules</h2><p>In the registration phase, in <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L681" target="_blank" rel="noopener"><code>[RCTCXXBridge  _registerModulesForClasses:lazilyDiscovered:]</code></a> , react native stores a list of registered classes into  a dictionary <code>_moduleDataByName</code>. The key is the <code>moduleName</code>, the value is the <code>RCTModuleData</code>. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NSMutableDictionary&lt;NSString *, RCTModuleData *&gt; *_moduleDataByName;</span><br></pre></td></tr></table></figure>
+<p>Remember, in registering phase, The classes of modules <code>are stored in</code>_moduleClassesByID<code>. While,</code>_moduleDataByID<code>stores</code>RCTModuleData`.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">// Native modules</span><br><span class="line">NSMutableArray&lt;RCTModuleData *&gt; *_moduleDataByID;</span><br><span class="line">NSMutableArray&lt;Class&gt; *_moduleClassesByID;</span><br></pre></td></tr></table></figure>
+<h3 id="RCTModuleData"><a href="#RCTModuleData" class="headerlink" title="RCTModuleData"></a>RCTModuleData</h3><p>Now, you may wondering what is <code>RCTModuleData</code>? While, it is just the data structure to hold data for react native module. </p>
+<p><img src="image-20201215174307790.png" alt="image-20201215174307790"></p>
+<p><code>RCTBridgeModuleProvider</code> in <code>RCTModuleData</code> is for initializing an <code>instance</code> of <code>RCTBridgeModule</code>. Then, <code>RCTModuleData</code> retain this <code>instance</code>.  In initialization phase, <code>RCTModuleData</code>  creates an instance for the <code>module class</code>  by <code>RCTBridgeModuleProvider</code> . What <code>RCTBridgeModuleProvider</code> does is to provide an instance using<code>[moduleClass new]</code>.  <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/Base/RCTModuleData.mm#L104" target="_blank" rel="noopener">Code ref</a>.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (instancetype)initWithModuleClass:(Class)moduleClass</span><br><span class="line">                             bridge:(RCTBridge *)bridge</span><br><span class="line">&#123;</span><br><span class="line">  return [self initWithModuleClass:moduleClass</span><br><span class="line">                    moduleProvider:^id&lt;RCTBridgeModule&gt;&#123; return [moduleClass new]; &#125;</span><br><span class="line">                            bridge:bridge];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Get-Module-by-name-or-class"><a href="#Get-Module-by-name-or-class" class="headerlink" title="Get Module by name or class"></a>Get Module by name or class</h3><p><code>RCTBridge</code> bridge is a simple wrapper for the <code>RCTCxxBridge</code> , to make the methods in <code>RCTCxxBridge.mm</code> available for other Objective-C objects.  You can access to these two methods to get the module from Objective-C objects. </p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RCTBridge </span></span><br><span class="line">- (<span class="keyword">id</span>)moduleForName:(<span class="built_in">NSString</span> *)moduleName</span><br><span class="line">- (<span class="keyword">id</span>)moduleForClass:(Class)moduleClass</span><br></pre></td></tr></table></figure>
+<p>They will look up the <code>_moduleDataByName</code> dictionary to find out the target  <code>RCTModuleData</code> and get its <code>instance</code>. <a href="https://github.com/facebook/react-native/blob/e125f12c01262c11d70c1015139d5f72c5576042/React/CxxBridge/RCTCxxBridge.mm#L529" target="_blank" rel="noopener">Source code here</a></p>
+<h2 id="Module-related-Class"><a href="#Module-related-Class" class="headerlink" title="Module-related Class"></a>Module-related Class</h2><p>You might be interested in the relationship between these classes.  </p>
+<p><img src="module_diagram.png" alt></p>
+<h2 id="RCTNativeModule-and-ModuleRegistry"><a href="#RCTNativeModule-and-ModuleRegistry" class="headerlink" title="RCTNativeModule and ModuleRegistry"></a><a href="https://github.com/facebook/react-native/blob/master/React/CxxModule/RCTNativeModule.mm" target="_blank" rel="noopener">RCTNativeModule</a> and ModuleRegistry</h2><p>In <code>RCTNativeModule.mm</code>, <code>RCTNativeModule</code>, this c++ class inherits from the base class, <code>NativeModule</code>, which holds the info for modules.<br>The constructor method in <code>RCTNativeModule</code> takes in two parameters, <code>RCTBridge</code> object and <code>RCTModuleData</code> object. </p>
+<h3 id="Invoke-method-in-RCTNativeModule"><a href="#Invoke-method-in-RCTNativeModule" class="headerlink" title="Invoke method in RCTNativeModule"></a>Invoke method in RCTNativeModule</h3><p>The <code>invoke</code> method in <code>RCTNativeModule</code> </p>
+<ol>
+<li><p>firstly get the <code>methodName</code> by <code>methodId</code></p>
+</li>
+<li><p>get the execution queue for current module </p>
+</li>
+<li><p>construct a block, which calls <a href="https://github.com/facebook/react-native/blob/306a8adade432ae5c12f0a13130c4e599d64c642/React/CxxModule/RCTNativeModule.mm#L135" target="_blank" rel="noopener"><code>invokeInner</code></a>. <code>invokeInner</code> <a href="https://github.com/facebook/react-native/blob/306a8adade432ae5c12f0a13130c4e599d64c642/React/CxxModule/RCTNativeModule.mm#L181" target="_blank" rel="noopener">calls</a>  <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/Base/RCTModuleMethod.mm#L519" target="_blank" rel="noopener"><code>invokeWithBridge:module:arguments:</code></a> in the <code>RCTModuleMethod.mm</code>.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">invokeInner(weakBridge, weakModuleData, methodId, <span class="built_in">std</span>::move(params), callId, isSyncModule ? Sync : Async);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p><img src="image-20201029152216662.png" alt="image-20201029152216662"></p>
+<ol start="4">
+<li><p>if current module is executed in <code>JSThread</code>, then block for invoking the method is executed synchronously. But if methods in current module should be executed in other threads, react native will dispatch the previous block into the related queue. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">dispatch_queue_t</span> <span class="built_in">queue</span> = m_moduleData.methodQueue;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">bool</span> isSyncModule = <span class="built_in">queue</span> == RCTJSThread;</span><br><span class="line"><span class="keyword">if</span> (isSyncModule) &#123;</span><br><span class="line">  block();</span><br><span class="line">  BridgeNativeModulePerfLogger::syncMethodCallReturnConversionEnd(moduleName, methodName);</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">queue</span>) &#123;</span><br><span class="line">  BridgeNativeModulePerfLogger::asyncMethodCallDispatch(moduleName, methodName);</span><br><span class="line">  dispatch_async(<span class="built_in">queue</span>, block);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="NativeModuleProxy"><a href="#NativeModuleProxy" class="headerlink" title="NativeModuleProxy"></a>NativeModuleProxy</h3><ul>
+<li><p>In the Runtime initialization phase, <code>RCTxxBridge.start-&gt;Instance.initializeBridge-&gt;NativeToJSBridge.initializeRuntime-&gt;JSIExecutor.initializeRuntime</code>,</p>
+<p>an <code>NativeModuleProxy</code> object is created and set as <code>nativeModuleProxy</code> property to the <code>global</code> object in JavaScript runtime context. </p>
+</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">JSIExecutor::initializeRuntime</span><span class="params">()</span> </span>&#123;</span><br><span class="line"> ...</span><br><span class="line">  runtime_-&gt;global().setProperty(</span><br><span class="line">      *runtime_,</span><br><span class="line">      <span class="string">"nativeModuleProxy"</span>,</span><br><span class="line">      Object::createFromHostObject(</span><br><span class="line">          *runtime_, <span class="built_in">std</span>::make_shared&lt;NativeModuleProxy&gt;(nativeModules_)));</span><br><span class="line"> ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>In <code>NativeModule.js</code>, JavaScript side can get a bunch of <code>native modules</code> from this <code>nativeModuleProxy</code> property from <code>global</code> object. </li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> NativeModules: &#123;[moduleName: string]: $FlowFixMe, ...&#125; = &#123;&#125;;</span><br><span class="line"><span class="keyword">if</span> (global.nativeModuleProxy) &#123;</span><br><span class="line">  NativeModules = global.nativeModuleProxy;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>In the iOS side, the <code>NativeModuleProxy</code> class holds a weak pointer for <code>JSINativeModules</code> , which actually holds a list of registered native modules. </li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::weak_ptr&lt;JSINativeModules&gt; weakNativeModules_;</span><br></pre></td></tr></table></figure>
+<p><img src="image-20201217183117953.png" alt="image-20201217183117953"></p>
+<h2 id="Export-Method"><a href="#Export-Method" class="headerlink" title="Export Method"></a>Export Method</h2><p>The <code>RCT_EXPORT_METHOD</code> macro is used to export method in Objective realm, and will be replaced by the following code</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#define RCT_REMAP_METHOD(js_name, method)       \</span><br><span class="line">  _RCT_EXTERN_REMAP_METHOD(js_name, method, NO) \</span><br><span class="line">  </span><br><span class="line">+(const RCTMethodInfo *)RCT_CONCAT(__rct_export__, RCT_CONCAT(js_name, RCT_CONCAT(__LINE__, __COUNTER__))) </span><br><span class="line">  &#123;                                                                                                          </span><br><span class="line">    static RCTMethodInfo config = &#123;#js_name, #method, is_blocking_synchronous_method&#125;;                       </span><br><span class="line">    return &amp;config;                                                                                          </span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>Basically, what it does is to construct a <code>RCTMethodInfo</code> structure.  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">typedef struct RCTMethodInfo &#123;</span><br><span class="line">  const char *const jsName;</span><br><span class="line">  const char *const objcName;</span><br><span class="line">  const BOOL isSync;</span><br><span class="line">&#125; RCTMethodInfo;</span><br></pre></td></tr></table></figure>
+<p>The  <a href="https://github.com/facebook/react-native/blob/23717e48aff3d7fdaea30c9b8dcdd6cfbb7802d5/React/Base/RCTModuleData.mm#L294" target="_blank" rel="noopener">calculateMethods</a>  extracts exported methods and get the <code>IMP</code> of these methods.  <code>IMP</code> actually is a c function which takes in <code>class</code> and <code>selector</code> as its parameters. And then, <code>RCTMethodInfo</code> and <code>moduleClass</code> are used to construct <code>RCTModuleMethod</code>, which confirms to <code>RCTBridgeMethod</code>.</p>
+<h3 id="RCTBridgeMethod"><a href="#RCTBridgeMethod" class="headerlink" title="RCTBridgeMethod"></a>RCTBridgeMethod</h3><p>The <code>RCTModuleData</code> also contains information about exported methods.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Returns the module methods. Note that this will gather the methods the first</span><br><span class="line"> * time it is called and then memoize the results.</span><br><span class="line"> */</span><br><span class="line">@property (nonatomic, copy, readonly) NSArray&lt;id&lt;RCTBridgeMethod&gt;&gt; *methods;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * Returns a map of the module methods. Note that this will gather the methods the first</span><br><span class="line"> * time it is called and then memoize the results.</span><br><span class="line"> */</span><br><span class="line">@property (nonatomic, copy, readonly) NSDictionary&lt;NSString *, id&lt;RCTBridgeMethod&gt;&gt; *methodsByName;</span><br></pre></td></tr></table></figure>
+<p>The <a href="https://github.com/facebook/react-native/blob/23717e48aff3d7fdaea30c9b8dcdd6cfbb7802d5/React/Base/RCTModuleData.mm#L373" target="_blank" rel="noopener">getter methods</a> for these two will generate a list of <code>RCTBridgeMethod</code> objects. <code>RCTBridgeMethod</code> is a protocol. Any class confirms to this protocol has to implement <code>JSMethodName</code>,  <code>functionType</code> and <code>invokeWithBridge: module:arguments:</code> function. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@protocol RCTBridgeMethod &lt;NSObject&gt;</span><br><span class="line"></span><br><span class="line">@property (nonatomic, readonly) const char *JSMethodName;</span><br><span class="line">@property (nonatomic, readonly) RCTFunctionType functionType;</span><br><span class="line"></span><br><span class="line">- (id)invokeWithBridge:(RCTBridge *)bridge module:(id)module arguments:(NSArray *)arguments;</span><br><span class="line"></span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>So when react native triggers these two getter method? Well, in the <code>RCTUIManager</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">RCT_EXPORT_METHOD(dispatchViewManagerCommand</span><br><span class="line">                  : (nonnull NSNumber *)reactTag commandID</span><br><span class="line">                  : (id /*(NSString or NSNumber) */)commandID commandArgs</span><br><span class="line">                  : (NSArray&lt;id&gt; *)commandArgs)</span><br></pre></td></tr></table></figure>
+<p>Beside, <code>RCTModuleData</code> also sets up and holds the thread <code>methodQueue</code> for the native module.  This <code>dispatch_queue_t</code> object is also retained in <a href="https://github.com/facebook/react-native/blob/e54ead6556f813fc622fd5e1f27ab2b41fa4f213/React/Base/RCTBridgeModule.h#L155" target="_blank" rel="noopener">RCTBridgeModule.h</a>, which is used to call all exported methods.</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)setUpMethodQueue</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (_instance &amp;&amp; !_methodQueue &amp;&amp; _bridge.valid) &#123;</span><br><span class="line">    RCT_PROFILE_BEGIN_EVENT(RCTProfileTagAlways, <span class="string">@"[RCTModuleData setUpMethodQueue]"</span>, <span class="literal">nil</span>);</span><br><span class="line">    <span class="built_in">BOOL</span> implementsMethodQueue = [_instance respondsToSelector:<span class="keyword">@selector</span>(methodQueue)];</span><br><span class="line">    <span class="keyword">if</span> (implementsMethodQueue &amp;&amp; _bridge.valid) &#123;</span><br><span class="line">      _methodQueue = _instance.methodQueue;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!_methodQueue &amp;&amp; _bridge.valid) &#123;</span><br><span class="line">      <span class="comment">// Create new queue (store queueName, as it isn't retained by dispatch_queue)</span></span><br><span class="line">      _queueName = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"com.facebook.react.%@Queue"</span>, <span class="keyword">self</span>.name];</span><br><span class="line">      _methodQueue = dispatch_queue_create(_queueName.UTF8String, DISPATCH_QUEUE_SERIAL);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// assign it to the module</span></span><br><span class="line">      <span class="keyword">if</span> (implementsMethodQueue) &#123;</span><br><span class="line">        <span class="keyword">@try</span> &#123;</span><br><span class="line">          [(<span class="keyword">id</span>)_instance setValue:_methodQueue forKey:<span class="string">@"methodQueue"</span>];</span><br><span class="line">        &#125; <span class="keyword">@catch</span> (<span class="built_in">NSException</span> *exception) &#123;</span><br><span class="line">          RCTLogError(</span><br><span class="line">              <span class="string">@"%@ is returning nil for its methodQueue, which is not "</span></span><br><span class="line">               <span class="string">"permitted. You must either return a pre-initialized "</span></span><br><span class="line">               <span class="string">"queue, or @synthesize the methodQueue to let the bridge "</span></span><br><span class="line">               <span class="string">"create a queue for you."</span>,</span><br><span class="line">              <span class="keyword">self</span>.name);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    RCT_PROFILE_END_EVENT(RCTProfileTagAlways, <span class="string">@""</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="How-does-JS-invoke-a-method-in-Native"><a href="#How-does-JS-invoke-a-method-in-Native" class="headerlink" title="How does JS invoke a method in Native?"></a>How does JS invoke a method in Native?</h2><p>I set a breakpoint at   <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/Base/RCTModuleMethod.mm#L519" target="_blank" rel="noopener"><code>[RCTModuleMethod invokeWithBridge:module:arguments:]</code></a>.</p>
+<p><img src="image-20201217171417579.png" alt="image-20201217171417579"></p>
+<ol>
+<li>in initialization phase, <code>nativeFlushQueueImmediate</code> property is set in the global object of the JavaScript execution context.. <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/jsiexecutor/jsireact/JSIExecutor.cpp#L90" target="_blank" rel="noopener">code reference here</a>. <code>global.nativeFlushQueueImmediate(queue)</code> is called in <code>enqueueNativeCall</code> from the Javascript side. <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/Libraries/BatchedBridge/MessageQueue.js#L318" target="_blank" rel="noopener">code ref.</a>  Before calling, it makes sure the last Flush is 5 milliseconds ago;  then <code>nativeFlushQueueImmediate</code> is triggered.  </li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (</span><br><span class="line">     global.nativeFlushQueueImmediate &amp;&amp;</span><br><span class="line">     now - <span class="keyword">this</span>._lastFlush &gt;= MIN_TIME_BETWEEN_FLUSHES_MS</span><br><span class="line">   ) &#123;</span><br><span class="line">     <span class="keyword">const</span> queue = <span class="keyword">this</span>._queue;</span><br><span class="line">     <span class="keyword">this</span>._queue = [[], [], [], <span class="keyword">this</span>._callID];</span><br><span class="line">     <span class="keyword">this</span>._lastFlush = now;</span><br><span class="line">     <span class="comment">// 🌟</span></span><br><span class="line">     global.nativeFlushQueueImmediate(queue);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/jsi/JSCRuntime.cpp#L1151" target="_blank" rel="noopener"><code>call</code> function in JSCRuntime</a> is invoked when there is a method call from JavaScrip side, then the <code>host function</code> is triggered. In this case, the host function is <code>nativeFlushQueueImmediate</code> in the C++ realm.</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">JSValueRef call(</span><br><span class="line">        JSContextRef ctx,</span><br><span class="line">        JSObjectRef <span class="function"><span class="keyword">function</span>,</span></span><br><span class="line"><span class="function">        <span class="title">JSObjectRef</span> <span class="title">thisObject</span>,</span></span><br><span class="line"><span class="function">        <span class="title">size_t</span> <span class="title">argumentCount</span>,</span></span><br><span class="line">        const JSValueRef arguments[],</span><br><span class="line">        JSValueRef *exception) &#123;</span><br><span class="line">  HostFunctionMetadata *metadata =</span><br><span class="line">          static_cast&lt;HostFunctionMetadata *&gt;(JSObjectGetPrivate(<span class="function"><span class="keyword">function</span>));</span></span><br><span class="line"><span class="function">  <span class="title">JSCRuntime</span> &amp;<span class="title">rt</span> = *(<span class="params">metadata-&gt;runtime</span>);</span></span><br><span class="line"><span class="function">  ...</span></span><br><span class="line"><span class="function">     // 🌟🌟</span></span><br><span class="line"><span class="function">     <span class="title">metadata</span>-&gt;<span class="title">hostFunction_</span>(<span class="params">rt, thisVal, args, argumentCount</span>));</span></span><br><span class="line"><span class="function">  ...</span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>See the following C++ lambda is used to create the host function <code>nativeFlushQueueImmediate</code>. In side this  C++ lambda,  we can see it calls <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/jsiexecutor/jsireact/JSIExecutor.cpp#L106" target="_blank" rel="noopener">callNativeModules</a>.</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"> runtime_-&gt;global().setProperty(</span><br><span class="line">      *runtime_,</span><br><span class="line">      <span class="string">"nativeFlushQueueImmediate"</span>,</span><br><span class="line">      Function::createFromHostFunction(</span><br><span class="line">          *runtime_,</span><br><span class="line">          PropNameID::forAscii(*runtime_, <span class="string">"nativeFlushQueueImmediate"</span>),</span><br><span class="line">          <span class="number">1</span>,</span><br><span class="line">          [<span class="keyword">this</span>](</span><br><span class="line">              jsi::Runtime &amp;,</span><br><span class="line">              <span class="keyword">const</span> jsi::Value &amp;,</span><br><span class="line">              <span class="keyword">const</span> jsi::Value *args,</span><br><span class="line">              <span class="keyword">size_t</span> count) &#123;</span><br><span class="line">            <span class="keyword">if</span> (count != <span class="number">1</span>) &#123;</span><br><span class="line">              <span class="keyword">throw</span> <span class="built_in">std</span>::invalid_argument(</span><br><span class="line">                  <span class="string">"nativeFlushQueueImmediate arg count must be 1"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            callNativeModules(args[<span class="number">0</span>], <span class="literal">false</span>);</span><br><span class="line">            <span class="keyword">return</span> Value::undefined();</span><br><span class="line">          &#125;</span><br><span class="line">      )</span><br><span class="line">  );</span><br><span class="line">```   </span><br><span class="line">Then [ `callNativeModules` in `JSToNativeBridge`](https:<span class="comment">//github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/jsiexecutor/jsireact/JSIExecutor.cpp#L390) is invoked.</span></span><br><span class="line"></span><br><span class="line"><span class="number">4.</span> The [callNativeModules in `JSToNativeBridge`](https:<span class="comment">//github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/cxxreact/NativeToJsBridge.cpp#L54) firstly parses the `JSON` data to get the `moduleIds`, `methodIds` and `params`, etc.  [source code here](https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/cxxreact/MethodCall.cpp#L38).  After constructing `MethodCall` structure, which holds `moduleId`, `methodId`, `arguments`, `callId`, [`callNativeModules` in `ModuleRegistry.cpp`](https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/ReactCommon/cxxreact/ModuleRegistry.cpp#L220)  is called.</span></span><br><span class="line">  ```c++</span><br><span class="line">   <span class="comment">// This is always populated</span></span><br><span class="line">  <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;NativeModule&gt;&gt; modules_;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">void</span> ModuleRegistry::callNativeMethod(</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> moduleId,</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> methodId,</span><br><span class="line">    folly::dynamic &amp;&amp;params,</span><br><span class="line">    <span class="keyword">int</span> callId) &#123;</span><br><span class="line">  <span class="keyword">if</span> (moduleId &gt;= modules_.size()) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="built_in">std</span>::runtime_error(folly::to&lt;<span class="built_in">std</span>::<span class="built_in">string</span>&gt;(</span><br><span class="line">        <span class="string">"moduleId "</span>, moduleId, <span class="string">" out of range [0.."</span>, modules_.size(), <span class="string">")"</span>));</span><br><span class="line">  &#125;</span><br><span class="line">  modules_[moduleId]-&gt;invoke(methodId, <span class="built_in">std</span>::move(params), callId);</span><br><span class="line">  &#125;</span><br><span class="line">  ``` </span><br><span class="line">  `moduleId` is used to look up the `NativeModule` object in a <span class="built_in">list</span> of modules.  `NativeModule` <span class="built_in">list</span> is <span class="built_in">set</span> up in `CxxBridge` initialization phases, which basically is a <span class="built_in">vector</span> holding <span class="keyword">module</span> information in C++ realm, transformed from `_moduleDataByID` <span class="built_in">array</span> in Objc realm. As we know `_moduleDataByID` is a <span class="built_in">list</span> of  `RCTModuleData` holding registered `RCTBridgeModule` <span class="keyword">and</span> its instance. </span><br><span class="line"></span><br><span class="line"><span class="number">5.</span> It goes to `invoke` in the [`RCTNativeModule.mm`]( https:<span class="comment">//github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/CxxModule/RCTNativeModule.mm#L106), which has module info in its private variable `RCTModuleData` object. </span></span><br><span class="line"></span><br><span class="line"><span class="number">6.</span> The[`invoke`](https:<span class="comment">//github.com/facebook/react-native/blob/306a8adade432ae5c12f0a13130c4e599d64c642/React/CxxModule/RCTNativeModule.mm#L74) function in the [`RCTNativeModule.mm`]( https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/CxxModule/RCTNativeModule.mm#L106) calls [`invokeInner`](https://github.com/facebook/react-native/blob/306a8adade432ae5c12f0a13130c4e599d64c642/React/CxxModule/RCTNativeModule.mm#L135). Inside ` invokeInner`, it get the `RCTBridgeMethod` object from `RCTModuleData` object using `methodId` . [code](https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/CxxModule/RCTNativeModule.mm#L155)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">```objective-c</span><br><span class="line">  id&lt;RCTBridgeMethod&gt; method = moduleData.methods[methodId]</span><br></pre></td></tr></table></figure>
+<p>Then, it <a href="https://github.com/facebook/react-native/blob/306a8adade432ae5c12f0a13130c4e599d64c642/React/CxxModule/RCTNativeModule.mm#L181" target="_blank" rel="noopener">calls</a>  <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/Base/RCTModuleMethod.mm#L519" target="_blank" rel="noopener"><code>invokeWithBridge:module:arguments:</code></a> in the <code>RCTModuleMethod.mm</code>. </p>
+<p><img src="image-20201029152216662.png" alt="image-20201029152216662"></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id result = [method invokeWithBridge:bridge <span class="keyword">module</span>:moduleData.instance arguments:objcParams];</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/CxxModule/RCTNativeModule.mm#L181" target="_blank" rel="noopener">code ref</a></p>
+<p><img src="image-20201029162107074.png" alt="image-20201029162107074" style="zoom:50%;"></p>
+<ol start="7">
+<li>The  <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/Base/RCTModuleMethod.mm#L519" target="_blank" rel="noopener"><code>invokeWithBridge:module:arguments:</code></a>  uses <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/Base/RCTModuleMethod.mm#L566" target="_blank" rel="noopener"> NSInvocation </a> to send message to the related <code>module</code> object. </li>
+</ol>
+<blockquote>
+<p> An <code>NSInvocation</code> object contains all the elements of an Objective-C message: a target, a selector, arguments, and the return value.</p>
+</blockquote>
+<p>​        7.1.  <a href="https://github.com/facebook/react-native/blob/17a8737ecb68f61a14f54bf0e2efeb618f97d326/React/Base/RCTModuleMethod.mm#L204" target="_blank" rel="noopener">parse MethodSignature</a> to init <code>NSInvocation</code>.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">_selector = NSSelectorFromString(RCTParseMethodSignature(_methodInfo-&gt;objcName, &amp;arguments));</span><br><span class="line">....  </span><br><span class="line">NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:methodSignature];</span><br><span class="line">...</span><br><span class="line">// set  selector  </span><br><span class="line">invocation.selector = _selector;</span><br></pre></td></tr></table></figure>
+<p>​        7.2, trigger the method in the module  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[_invocation invokeWithTarget:module];</span><br></pre></td></tr></table></figure>
+<p>In a nutshell,  when JavaScript side calls a method in a specific native module, the indices of the module and method are passed to Objc through JSCRuntime. These information is serialized as JSON object. By looking up the table which holds the information about registered modules and methods, React Native can invoke the specific method in a specific module in the Objective-C realm.  There are some <a href="https://github.com/react-native-community/discussions-and-proposals/blob/master/proposals/0002-Turbo-Modules.md#motivation" target="_blank" rel="noopener">restrictions</a> in this workflow. </p>
+<p><img src="image-20201001143632128.png" alt="image-20201001143632128"></p>
+<blockquote>
+<ol>
+<li>Native Modules are specified in <a href="https://github.com/facebook/react-native/blob/1e8f3b11027fe0a7514b4fc97d0798d3c64bc895/local-cli/link/__fixtures__/android/0.20/MainActivity.java#L37" target="_blank" rel="noopener">a package</a> and are eagerly initialized. The startup time of React Native increases with the number of Native Modules, even if some of those Native Modules are never used. </li>
+<li>There is no simple way to check if the Native Modules that JavaScript calls are actually included in the native app. With over the air updates, there is no easy way to check if a newer version of JavaScript calls the right method with the correct set of arguments in Native Module.</li>
+<li>Native Modules are always singleton and their lifecycle is typically tied to the lifetime of the bridge. This issue is compounded in brownfield apps where the React Native bridge may start and shut down multiple times.</li>
+<li>During the startup process, Native Modules are typically specified in <a href="https://github.com/facebook/react-native/blob/b938cd524a20c239a5d67e4a1150cd19e00e45ba/ReactAndroid/src/main/java/com/facebook/react/CompositeReactPackage.java" target="_blank" rel="noopener">multiple packages</a>. We then <a href="https://github.com/facebook/react-native/blob/407e033b34b6afa0ea96ed72f16cd164d572e911/ReactAndroid/src/main/java/com/facebook/react/ReactInstanceManager.java#L1132" target="_blank" rel="noopener">iterate</a> over the list <a href="https://github.com/facebook/react-native/blob/617e25d9b5cb10cfc6842eca62ff22d39eefcf7b/ReactAndroid/src/main/java/com/facebook/react/bridge/NativeModuleRegistry.java#L46" target="_blank" rel="noopener">multiple times</a> before we finally give the bridge a <a href="https://github.com/facebook/react-native/blob/master/ReactAndroid/src/main/java/com/facebook/react/bridge/CatalystInstanceImpl.java#L124" target="_blank" rel="noopener">list of Native Modules</a>. This does not need to happen at runtime.</li>
+<li>The actual methods and constants of a Native Module are <a href="https://github.com/facebook/react-native/blob/master/ReactCommon/cxxreact/ModuleRegistry.cpp#L81" target="_blank" rel="noopener">computed during runtime</a> using <a href="https://github.com/facebook/react-native/blob/master/ReactAndroid/src/main/java/com/facebook/react/bridge/JavaModuleWrapper.java#L75" target="_blank" rel="noopener">reflection</a>. </li>
+</ol>
+</blockquote>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          Author : RY Zheng <br/>
+        
+        Link : <a href="">https://suelan.github.io/2020/12/23/20201223-what-is-behind-react-native-module/</a><br>
+        License : MIT
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="qzone, qq, weibo, wechat, douban, google, facebook, twitter" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">Buy me a cup of coffee</p>
+  
+  <button id="reward-btn">
+    
+    <span>赞赏 ☕️</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/img/donate.jpeg" alt="感谢鼓励">
+        <p class="qrcode-meta">感谢鼓励</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/Dive-into-React-Native/">
+              #Dive into React Native
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        Previous Article:
+        <a href="/2020/08/18/20200817-ios-main-in-assembly/" target="_self">iOS main in Assembly</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        Nex Article:
+        <a href="/2020/12/24/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
+      appKey: "W9uovU160HsQkI3hQwlHgBqa",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+      To see a World in a Grain of Sand;And a Heaven in a Wild Flower; Hold Infinity in the palm of your hand; And Eternity in an hour
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2019, 2, 10).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>
