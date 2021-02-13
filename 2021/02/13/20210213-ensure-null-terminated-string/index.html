@@ -8,12 +8,12 @@
   
   
   
-  <title>RY &#39;s Blog</title>
+  <title>Ensure Null-Terminated JS Bundle in React Native | RY &#39;s Blog</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="Hexo, theme-bmw">
+    <meta name="keywords" content="Dive into React Native,">
   
 
   <script>
@@ -219,7 +219,7 @@
 
 <div class="post">
   <h1 class="article-title">
-    <span></span>
+    <span>Ensure Null-Terminated JS Bundle in React Native</span>
   </h1>
   <div class="article-top-meta">
     <span>
@@ -229,7 +229,7 @@
     
     
       <span>
-        read : <span class="article-timer" data-identity="boostnote"></span>
+        read : <span class="article-timer" data-identity="20210213-ensure-null-terminated-string"></span>
       </span>
     
   </div>
@@ -238,7 +238,31 @@
 
   <div class="article-content">
     <div class="markdown-body">
-      {"folders":[],"version":"1.0"}
+      <h2 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h2><p>There is an expensive copy operation for data buffer when loading and parsing JS Bundle in React Native.  In my case, I have a <code>4.8</code> MB JS bundle. Xcode instrument profiler shows it takes up 15.81 MB trying to copy a <code>NSData</code> object in  <code>ensureNullTerminated</code> function in <code>NSDataBigString</code> class.</p>
+<p><img src="instrument-profile.png" alt="image"></p>
+<p>This is the brief process for <code>RCTBridge</code> loading JS bundle<br><img src="image-load.png" alt="image"></p>
+<p>In Objc, <code>NSData</code> is a static byte buffer that bridges to Data, which is a byte buffer in a contiguous region of memory. Here, <code>NSDataBigString</code> class holds <code>NSData</code> object constructed from JS bundle. </p>
+<p><img src="nsdata.png" alt="image"></p>
+<p>Inside react-native framework, it has to treat this data buffer in a contiguous region of memory as a <a href="https://en.cppreference.com/w/c/string/byte#:~:text=A%20null%2Dterminated%20byte%20string,(the%20terminating%20null%20character" target="_blank" rel="noopener">null-terminated byte string (NTBS)</a>.&amp;text=For%20example%2C%20the%20character%20array,%22cat%22%20in%20ASCII%20encoding.) . </p>
+<blockquote>
+<p>A null-terminated byte string (NTBS) is a sequence of nonzero bytes followed by a byte with value zero (the terminating null character). Each byte in a byte string encodes one character of some character set. For example, the character array {‘\x63’,’\x61’,’\x74’,’\0’} is an NTBS holding the string “cat” in ASCII encoding.</p>
+</blockquote>
+<p>While, this data buffer doesn’t end with <code>\0</code> character. Besides, In Objective-C, <code>NSData</code> is an immutable object. In order to add the <code>Null</code> byte, <code>\0</code> character, firstly, it has to copy the original immutable <code>NSData</code> object and construct a mutable object; then append <code>\0</code> to the data buffer.</p>
+<h2 id="React-Native-version"><a href="#React-Native-version" class="headerlink" title="React Native version:"></a>React Native version:</h2><p>Run <code>react-native info</code> in your terminal and copy the results here.<br>react-native: v0.63.3<br>device: iPhone 5s<br>OS version: 12.4.8 </p>
+<h2 id="Steps-To-Reproduce"><a href="#Steps-To-Reproduce" class="headerlink" title="Steps To Reproduce"></a>Steps To Reproduce</h2><p>Provide a detailed list of steps that reproduce the issue.</p>
+<ol>
+<li>open <code>RNTester</code> in <code>react-native</code> repo. <code>react-native/packages/rn-tester</code></li>
+<li>find <code>ensureNullTerminated</code>  and set a breakpoint there </li>
+<li>run the <code>RNTester</code> </li>
+</ol>
+<h2 id="Snack-code-example-screenshot-or-link-to-a-repository"><a href="#Snack-code-example-screenshot-or-link-to-a-repository" class="headerlink" title="Snack, code example, screenshot, or link to a repository:"></a>Snack, code example, screenshot, or link to a repository:</h2><p><img src="code-snippet.png" alt="image"></p>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><ul>
+<li>Add <code>\0</code> character ahead of time when building JS bundle. By doing this, you can avoid this copy operation during bundle loading in App launching phase. </li>
+</ul>
+<h2 id="Ref"><a href="#Ref" class="headerlink" title="Ref"></a>Ref</h2><ul>
+<li><a href="https://github.com/facebook/react-native/issues/30145" target="_blank" rel="noopener">https://github.com/facebook/react-native/issues/30145</a></li>
+</ul>
+
     </div>
   </div>
   
@@ -249,7 +273,7 @@
         
           Author : RY Zheng <br/>
         
-        Link : <a href="">https://suelan.github.io/2021/02/13/React-Native-ExpoKit-Notification/boostnote/</a><br>
+        Link : <a href="">https://suelan.github.io/2021/02/13/20210213-ensure-null-terminated-string/</a><br>
         License : MIT
         </blockquote>
       </div>
@@ -307,6 +331,15 @@
     <div class="article-meta pull-left">
       <span>
         
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/Dive-into-React-Native/">
+              #Dive into React Native
+            </a>
+          </span>
+          
+        
       </span>
     </div>
     <div class="article-meta pull-right">
@@ -327,9 +360,15 @@
       <div class="nav-pre">
         <i class="iconfont icon-prev"></i>
         previous:
-        <a href="/2021/02/13/20210213-ensure-null-terminated-string/" target="_self">Ensure Null-Terminated JS Bundle in React Native</a>
+        <a href="/2021/02/13/20210213-dive-into-runloop-ios/" target="_self">Dive into CFRunLoop</a>
       </div>
     
+    
+      <div class="nav-next">
+        next:
+        <a href="/2021/02/13/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <i class="iconfont icon-next"></i>
+      </div>
     
   </nav>
 
