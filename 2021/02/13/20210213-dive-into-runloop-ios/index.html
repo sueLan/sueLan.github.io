@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="RY">
+  
+  
+  
+  <title>Dive into CFRunLoop | RY &#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="iOS,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+
+  
+
+  
+    <link rel="icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js" async></script>
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">RY</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              Home
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              Popular
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          
+            <a 
+              href="/categories/"
+              target="_self"
+            >
+              Categories
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          
+            <a 
+              href="/tags/"
+              target="_self"
+            >
+              Tags
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/about/">
+          
+            <a 
+              href="/about/"
+              target="_self"
+            >
+              About
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>Me</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
+                    target="_blank"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
+                    Jian Shu | Chinese
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>Dive into CFRunLoop</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      post ime : 
+      2021-02-13
+    </span>
+    
+      <span>
+        category : 
+          <a href="/categories/iOS/">
+            iOS
+          </a>
+      </span>
+    
+    
+      <span>
+        read : <span class="article-timer" data-identity="20210213-dive-into-runloop-ios"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <h2 id="What-is-RunLoop-in-iOS"><a href="#What-is-RunLoop-in-iOS" class="headerlink" title="What is RunLoop in iOS?"></a>What is RunLoop in iOS?</h2><p>Before talking about RunLoop in iOS, we may have to know something about event loop and thread.  In <a href="https://en.wikipedia.org/wiki/OS/360_and_successors#MVT" target="_blank" rel="noopener">OS/360 Multiprogramming with a Variable Number of Tasks</a> (MVT) in 1967, threads made an early appearance under the name of “tasks”. A <strong>thread</strong> in computer science  is short for a <em>thread of execution</em>. Once the tasks in one Thread is all done, the thread finishes its job and exits. Sometimes, we need a way to keep it alive and handling events.  Then,  comes the event loop. The psudo code for event loop is like this:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loop</span></span></span><br><span class="line"><span class="function">    <span class="title">initialize</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    <span class="title">while</span> <span class="title">message</span> != <span class="title">quit</span></span></span><br><span class="line"><span class="function">        <span class="title">message</span> := <span class="title">get_next_message</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">        <span class="title">process_message</span>(<span class="params">message</span>)</span></span><br><span class="line"><span class="function">    <span class="title">end</span> <span class="title">while</span></span></span><br><span class="line"><span class="function"><span class="title">end</span> <span class="title">function</span></span></span><br></pre></td></tr></table></figure>
+<p>In Wikipedia, event loop is a programming construct or <a href="https://en.wikipedia.org/wiki/Software_design_pattern" target="_blank" rel="noopener">design pattern</a> that waits for and dispatches <a href="https://en.wikipedia.org/wiki/Event-driven_programming" target="_blank" rel="noopener">events</a> or <a href="https://en.wikipedia.org/wiki/Message_Passing_Interface" target="_blank" rel="noopener">messages</a> in a <a href="https://en.wikipedia.org/wiki/Computer_program" target="_blank" rel="noopener">program</a>.  In this event loop, it keeps <code>waiting events -&gt; receive events -&gt; handle events</code> until the exit condition is met. </p>
+<p>In Apple’s doc,  this kind of event loop is implemented by <code>CFRunLoop</code> in low-level. In cocoa, the object is an instance of <code>NSRunLoop</code> There is exactly one run loop per thread. </p>
+<blockquote>
+<p>Run loops are part of the fundamental infrastructure associated with threads. A <em>run loop</em> is an event processing loop that you use to schedule work and coordinate the receipt of incoming events. The purpose of a run loop is to keep your thread busy when there is work to do and put your thread to sleep when there is none.</p>
+</blockquote>
+<blockquote>
+<p>A CFRunLoop object monitors sources of input to a task and dispatches control when they become ready for processing.  </p>
+</blockquote>
+<p>It can handle </p>
+<ul>
+<li><p>user input devices</p>
+</li>
+<li><p>port objects </p>
+</li>
+<li><p>network connections</p>
+</li>
+<li><p>periodic or time-delayed events</p>
+</li>
+<li><p>asynchronous callbacks</p>
+<p><img src="image-20210128230441389.png" alt="image-20210128230441389"></p>
+</li>
+</ul>
+<p>Apple provides two APIs to get runloop object </p>
+<ul>
+<li><code>CFRunLoopGetMain()</code> // the main CFRunLoop object</li>
+<li><code>CFRunLoopGetCurrent()</code> // CFRunLoop object for the current thread</li>
+</ul>
+<h2 id="RunLoop-Mode"><a href="#RunLoop-Mode" class="headerlink" title="RunLoop Mode"></a>RunLoop Mode</h2><blockquote>
+<p>A <em>run loop mode</em> is a collection of input sources and timers to be monitored and a collection of run loop observers to be notified. Each time you run your run loop, you specify (either explicitly or implicitly) a particular “mode” in which to run.During that pass of the run loop, only sources associated with that mode are monitored and allowed to deliver their events.   — <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23" target="_blank" rel="noopener">doc</a></p>
+</blockquote>
+<p>A run loop mode contains a set of <code>CFRunLoopSource</code>, a list of <code>CFRunLoopTimer</code> and <code>CFRunLoopObservers</code>. They are all inputs for runloop. </p>
+<p><img src="image-20210128223829153.png" alt="image-20210128223829153"></p>
+<h2 id="Inputs"><a href="#Inputs" class="headerlink" title="Inputs"></a>Inputs</h2><p>Three kinds of inputs can be monitored by a run loop </p>
+<ul>
+<li>CFRunLoopSource </li>
+<li>CFRunLoopTimer</li>
+<li>CFRunLoopObservers</li>
+</ul>
+<h3 id="Source-CFRunLoopSource"><a href="#Source-CFRunLoopSource" class="headerlink" title="Source  - CFRunLoopSource"></a>Source  - CFRunLoopSource</h3><p><a href="https://developer.apple.com/documentation/corefoundation/cfrunloopsource-rhr" target="_blank" rel="noopener">CFRunLoopSource</a></p>
+<blockquote>
+<p>A CFRunLoopSource object is an abstraction of an input source that can be put into a run loop. Input sources typically generate asynchronous events, such as messages arriving on a network port or actions performed by the user.</p>
+</blockquote>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">CFRunLoopSource</span> &#123;</span></span><br><span class="line">    CFRuntimeBase _base;</span><br><span class="line">    <span class="keyword">uint32_t</span> _bits;</span><br><span class="line">    <span class="keyword">pthread_mutex_t</span> _lock;</span><br><span class="line">    CFIndex _order;			<span class="comment">/* immutable */</span></span><br><span class="line">    CFMutableBagRef _runLoops;</span><br><span class="line">    <span class="keyword">union</span> &#123;</span><br><span class="line">4      CFRunLoopSourceContext version0;	<span class="comment">/* immutable, except invalidation */</span></span><br><span class="line">        CFRunLoopSourceContext1 version1;	<span class="comment">/* immutable, except invalidation */</span></span><br><span class="line">    &#125; _context;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><code>_context</code> is a <code>union</code> type. A union looks like a structure, but  it will use the memory space for just one of the fields in its definition. So the <code>_context</code> is either an <code>CFRunLoopSourceContext</code>    structure or <code>CFRunLoopSourceContext1</code> structure.</p>
+<h4 id="Two-categories"><a href="#Two-categories" class="headerlink" title="Two categories"></a>Two categories</h4><p>As it is mentioned in this <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23" target="_blank" rel="noopener">doc</a>, we mainly care about two categories, port-base input sources, source1,  and non-port-based input sources, source0.</p>
+<ul>
+<li>Version 0 sources, so named because the <code>version</code> field of their context structure is 0, are managed manually by the <code>application</code>.<ul>
+<li>When a source is ready to fire, some part of the <code>application</code>, perhaps code on a separate<code>thread</code> waiting for an event, must call <a href="https://developer.apple.com/documentation/corefoundation/1543700-cfrunloopsourcesignal" target="_blank" rel="noopener"><code>CFRunLoopSourceSignal(_:)</code></a> to tell the run loop that the source is ready to fire. </li>
+</ul>
+</li>
+<li>Version 1 sources are managed by the run loop and kernel. <ul>
+<li>These sources use <code>Mach ports</code> to signal when the sources are ready to fire. </li>
+<li>A source is automatically <code>signaled by the kernel</code> when a message arrives on the source’s Mach port.</li>
+</ul>
+</li>
+</ul>
+<p><img src="image-20210125183432020.png" alt="image-20210125183432020"></p>
+<h4 id="bits-field"><a href="#bits-field" class="headerlink" title="bits field"></a><code>bits</code> field</h4><p>It seems that <code>bits</code> field is used to mark the status of the <code>CFRunLoopSouceRef</code> .  </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CF_INLINE Boolean __CFRunLoopSourceIsSignaled(CFRunLoopSourceRef rls) &#123;</span><br><span class="line">    <span class="keyword">return</span> (Boolean)__CFBitfieldGetValue(rls-&gt;_bits, <span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CF_INLINE <span class="keyword">void</span> __CFRunLoopSourceSetSignaled(CFRunLoopSourceRef rls) &#123;</span><br><span class="line">    __CFBitfieldSetValue(rls-&gt;_bits, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CF_INLINE <span class="keyword">void</span> __CFRunLoopSourceUnsetSignaled(CFRunLoopSourceRef rls) &#123;</span><br><span class="line">    __CFBitfieldSetValue(rls-&gt;_bits, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><a href="https://developer.apple.com/documentation/corefoundation/1543700-cfrunloopsourcesignal" target="_blank" rel="noopener">CFRunLoopSourceSignal</a> is used to signals a <code>version 0 source</code> , marking it as ready to fire. It actually updated the <code>bits</code> in the  <code>CFRunLoopSouceRef</code> structure. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CFRunLoopSourceSignal</span><span class="params">(CFRunLoopSourceRef rls)</span> </span>&#123;</span><br><span class="line">    CHECK_FOR_FORK();</span><br><span class="line">    __CFRunLoopSourceLock(rls);</span><br><span class="line">    <span class="keyword">if</span> (__CFIsValid(rls)) &#123;</span><br><span class="line">4__CFRunLoopSourceSetSignaled(rls);</span><br><span class="line">    &#125;</span><br><span class="line">    __CFRunLoopSourceUnlock(rls);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="CFRunLoopTimer"><a href="#CFRunLoopTimer" class="headerlink" title="CFRunLoopTimer"></a>CFRunLoopTimer</h3><h4 id="What-is-CFRunLoopTimer"><a href="#What-is-CFRunLoopTimer" class="headerlink" title="What is CFRunLoopTimer"></a>What is CFRunLoopTimer</h4><p><a href="https://developer.apple.com/documentation/corefoundation/cfrunlooptimer-rhk" target="_blank" rel="noopener">Doc for CFRunLoopTimer</a></p>
+<blockquote>
+<p>A CFRunLoopTimer object represents a specialized run loop source that fires at a preset time in the future. Timers can fire either only once or repeatedly at fixed time intervals.</p>
+</blockquote>
+<p>There are two conditions for a timer to be fired: </p>
+<ul>
+<li>one of the run loop modes to which the timer has been added is running </li>
+<li>the timer’s firing time has passed</li>
+</ul>
+<blockquote>
+<p>If a timer’s firing time occurs while the run loop is in a mode that is not monitoring the timer or during a long callout, the timer does not fire until the next time the run loop checks the timer. Therefore, the actual time at which the timer fires potentially can be a significant period of time after the scheduled firing time.</p>
+</blockquote>
+<h3 id="RunLoopObserver"><a href="#RunLoopObserver" class="headerlink" title="RunLoopObserver"></a>RunLoopObserver</h3><h4 id="How-to-use-observer"><a href="#How-to-use-observer" class="headerlink" title="How to use observer"></a>How to use observer</h4><ol>
+<li>We can use these two APIs to create RunLoopObserver and associated it with handlers. </li>
+</ol>
+<ul>
+<li>CFRunLoopObserverCreate(_:_:_:_:_:_:)</li>
+<li>CFRunLoopObserverCreateWithHandler(_:_:_:_:_:)</li>
+</ul>
+<ol start="2">
+<li><p>add the observer into the runloop </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  CFRunLoopObserverRef runloopObserver = CFRunLoopObserverCreateWithHandler(kCFAllocatorDefault, kCFRunLoopBeforeWaiting, YES, 0, ^(CFRunLoopObserverRef observer, CFRunLoopActivity activity) &#123;   </span><br><span class="line">   // handler code here  </span><br><span class="line">&#125;);</span><br><span class="line">   </span><br><span class="line">  CFRunLoopAddObserver(CFRunLoopGetMain(), runloopObserver, kCFRunLoopDefaultMode);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Observe specific RunLoop Activity </p>
+</li>
+</ol>
+<h2 id="RunLoop-Activity"><a href="#RunLoop-Activity" class="headerlink" title="RunLoop Activity"></a>RunLoop Activity</h2><blockquote>
+<p>The run loop stages in which an observer is scheduled are selected when the observer is created with <a href="https://developer.apple.com/documentation/corefoundation/1541546-cfrunloopobservercreate?language=objc" target="_blank" rel="noopener"><code>CFRunLoopObserverCreate</code></a>.       -<a href="https://developer.apple.com/documentation/corefoundation/cfrunloopactivity?language=objc" target="_blank" rel="noopener">doc</a></p>
+</blockquote>
+<p>There are several kinds of RunLoop Activity for CFRunLoop. You can associate run loop observers with these RunLoopActivity</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Run Loop Observer Activities */</span></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">CF_OPTIONS</span><span class="params">(CFOptionFlags, CFRunLoopActivity)</span> </span>&#123;</span><br><span class="line">    kCFRunLoopEntry = (<span class="number">1U</span>L &lt;&lt; <span class="number">0</span>), <span class="comment">// The entrance of the run loop, before entering the event processing loop. This activity occurs once for each call to CFRunLoopRun() and CFRunLoopRunInMode(_:_:_:).</span></span><br><span class="line">    kCFRunLoopBeforeTimers = (<span class="number">1U</span>L &lt;&lt; <span class="number">1</span>), <span class="comment">// Inside the event processing loop before any timers are processed.</span></span><br><span class="line">    kCFRunLoopBeforeSources = (<span class="number">1U</span>L &lt;&lt; <span class="number">2</span>), <span class="comment">// Inside the event processing loop before any sources are processed.</span></span><br><span class="line">    kCFRunLoopBeforeWaiting = (<span class="number">1U</span>L &lt;&lt; <span class="number">5</span>), </span><br><span class="line">    kCFRunLoopAfterWaiting = (<span class="number">1U</span>L &lt;&lt; <span class="number">6</span>),  <span class="comment">// Inside the event processing loop after the run loop wakes up, but before processing the event that woke it up. This activity occurs only if the run loop did in fact go to sleep during the current loop.</span></span><br><span class="line">    kCFRunLoopExit = (<span class="number">1U</span>L &lt;&lt; <span class="number">7</span>), <span class="comment">// The exit of the run loop, after exiting the event processing loop. This activity occurs once for each call to CFRunLoopRun() and CFRunLoopRunInMode(_:_:_:).</span></span><br><span class="line">    kCFRunLoopAllActivities = <span class="number">0x0FFFFFFF</span>U </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><a href="https://developer.apple.com/documentation/corefoundation/cfrunloopactivity" target="_blank" rel="noopener">https://developer.apple.com/documentation/corefoundation/cfrunloopactivity</a> </p>
+<h3 id="Run-Loop-Sequence-of-Events"><a href="#Run-Loop-Sequence-of-Events" class="headerlink" title="Run Loop Sequence of Events"></a>Run Loop Sequence of Events</h3><p>According to <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1" target="_blank" rel="noopener">apple doc</a>,  when runloop running  in a thread, it processes pending events and generates notifications for attached observers.  Briefly, it works as the follow digram shows. </p>
+<p><img src="image-20210209142244931.png" alt="image-20210209142244931"></p>
+<p>The implementation is in <code>CFRunLoopRunSpecific</code> and <code>__CFRunLoopRun</code> in <code>CFRunloop.c</code> . </p>
+<h3 id="Use-case-in-App-Performance-Monitoring"><a href="#Use-case-in-App-Performance-Monitoring" class="headerlink" title="Use case in App Performance Monitoring"></a>Use case in App Performance Monitoring</h3><p><code>Tencent</code> launched a <a href="https://github.com/Tencent/matrix" target="_blank" rel="noopener">iOS framework called matrix</a> to monitor App performance metrics. In this library, it leverages the Run Loop notifications to record timestamp when these notifications sent. </p>
+<ol>
+<li><p>create and add RunLoopObserver to current RunLoop <a href="https://github.com/Tencent/matrix/blob/c7fd99237af189fb060f90d1272350db19182dbf/matrix/matrix-iOS/Matrix/WCCrashBlockMonitor/CrashBlockPlugin/Main/BlockMonitor/WCBlockMonitorMgr.mm#L831" target="_blank" rel="noopener">CFRunLoopAddObserver</a></p>
+</li>
+<li><p><a href="https://github.com/Tencent/matrix/blob/c7fd99237af189fb060f90d1272350db19182dbf/matrix/matrix-iOS/Matrix/WCCrashBlockMonitor/CrashBlockPlugin/Main/BlockMonitor/WCBlockMonitorMgr.mm#L858" target="_blank" rel="noopener">record timestamp</a> in callback function invoked when the observer runs</p>
+</li>
+</ol>
+<p>So, I did a small experiments. I added a RunLoop Observer to the runloop in main thread. Then calculate the time gap between <code>kCFRunLoopBeforeTimers</code> notification in two continuous loop. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. create runloop observer </span></span><br><span class="line">CFRunLoopObserverRef beginObserver = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAllActivities, YES, LONG_MIN, &amp;myRunLoopCallback, &amp;context);</span><br><span class="line"><span class="comment">// 2.  add observer to runloop in the main thread</span></span><br><span class="line">CFRunLoopAddObserver([[NSRunLoop mainRunLoop] getCFRunLoop], beginObserver, kCFRunLoopCommonModes);</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 3. implemented callback for RunLoop observer </span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">myRunLoopCallback</span><span class="params">(CFRunLoopObserverRef observer, CFRunLoopActivity activity, <span class="keyword">void</span> *info)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     <span class="keyword">switch</span> (activity) &#123;</span><br><span class="line">        <span class="keyword">case</span> kCFRunLoopEntry:</span><br><span class="line">             self.isRunloopRunning = YES;</span><br><span class="line">             <span class="keyword">break</span>;       </span><br><span class="line">        <span class="keyword">case</span> kCFRunLoopBeforeTimers:</span><br><span class="line">             NSLog(@<span class="string">"[RY]kCFRunLoopBeforeTimers called %@"</span>, @(getCurrentMilliTimestamp() - monitor.runloopMilliTimestamp));</span><br><span class="line">             self.runloopMilliTimestamp = getCurrentMilliTimestamp();</span><br><span class="line">444444 self.isRunloopRunning = YES;</span><br><span class="line">         		 <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> kCFRunLoopBeforeSources:</span><br><span class="line">         		 self.isRunloopRunning = YES;</span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> kCFRunLoopBeforeWaiting:</span><br><span class="line">             self.isRunloopRunning = NO;</span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> kCFRunLoopAfterWaiting:</span><br><span class="line">             self.isRunloopRunning = YES;</span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> kCFRunLoopExit:</span><br><span class="line">             self.isRunloopRunning = NO;</span><br><span class="line">             <span class="keyword">break</span>;b</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Theoretically,  the time diff between  two continuous <code>kCFRunLoopBeforeTimers</code> notification should be within <code>16.67ms</code> to achieve smooth user experience in main thread, which means <code>RunLoop</code> runs 60 times per second. In the following log, one frame takes about <code>72ms</code> to executed. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> [RY]kCFRunLoopBeforeTimers called 3.628173828125</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 17.784912109375</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.041015625</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 1.23388671875</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 72.05419921875</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 5.138916015625</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.072021484375</span><br><span class="line">ers called 1.296875</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.070068359375</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.035888671875</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.051025390625</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.057861328125</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.01806640625</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.260009765625</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.03515625</span><br><span class="line"> [RY]kCFRunLoopBeforeTimers called 0.43212890625</span><br></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1" target="_blank" rel="noopener">https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1</a></li>
+<li><a href="https://blog.ibireme.com/2015/05/18/runloop/" target="_blank" rel="noopener">https://blog.ibireme.com/2015/05/18/runloop/</a></li>
+<li><a href="https://opensource.apple.com/tarballs/CF/" target="_blank" rel="noopener">https://opensource.apple.com/tarballs/CF/</a></li>
+<li><a href="https://developer.apple.com/documentation/corefoundation" target="_blank" rel="noopener">https://developer.apple.com/documentation/corefoundation</a></li>
+<li><a href="https://github.com/apple/swift-corelibs-foundation/" target="_blank" rel="noopener">https://github.com/apple/swift-corelibs-foundation/</a></li>
+</ul>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          Author : RY Zheng <br/>
+        
+        Link : <a href="">https://suelan.github.io/2021/02/13/20210213-dive-into-runloop-ios/</a><br>
+        License : MIT
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    <div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="google, facebook, twitter, weibo, wechat, douban" 
+  
+>
+  <span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
+</div>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">Buy me a cup of coffee</p>
+  
+  <button id="reward-btn">
+    
+    <span>赞赏 ☕️</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/img/donate.jpeg" alt="Thank you">
+        <p class="qrcode-meta">Thank you</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        previous:
+        <a href="/2020/12/24/20201224-How-Image-Loader-and-Cache-work-in-React-Native/" target="_self">How Image Loader and Cache work in React Native</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        next:
+        <a href="/2021/02/13/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
+      appKey: "W9uovU160HsQkI3hQwlHgBqa",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+      To see a World in a Grain of Sand;And a Heaven in a Wild Flower; Hold Infinity in the palm of your hand; And Eternity in an hour
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2019, 2, 10).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>
