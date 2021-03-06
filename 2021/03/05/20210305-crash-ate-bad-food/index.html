@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="RY">
+  
+  
+  
+  <title>Crash - ate bad food (0x8badf00d) | RY &#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="iOS,">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+
+  
+    <link rel="alternate" href="/rss/atom.xml" title="RY &#39;s Blog" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js" async></script>
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">RY</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              Home
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              Popular
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          
+            <a 
+              href="/categories/"
+              target="_self"
+            >
+              Categories
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          
+            <a 
+              href="/tags/"
+              target="_self"
+            >
+              Tags
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>Me</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
+                    target="_blank"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
+                    Jian Shu | Chinese
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>Crash - ate bad food (0x8badf00d)</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      post ime : 
+      2021-03-05
+    </span>
+    
+    
+      <span>
+        read : <span class="article-timer" data-identity="20210305-crash-ate-bad-food"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <p>Recently, my colleague came to me for a crash report. It is a case where system watch dog kills our app for blocking <code>main thread</code> for too long time. It seems many people encounter issues of this sorts from time to time. However, there are a few articles about it. I hope this article could help you. </p>
+<h2 id="Exception-Type"><a href="#Exception-Type" class="headerlink" title="Exception Type"></a>Exception Type</h2><p>As we know, a crash report records app’s state when it crashed. It is a crucial and first-hand resource to help us figure out what was happening when a crash happened in user’s device. When i to a crash report. I always try to extract as much information as I can. Apple actually has dedicated article about how to <a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/analyzing_a_crash_report" target="_blank" rel="noopener">analyze a crash report</a>. </p>
+<p>In this case, firstly, we can take a look at exception type, which is <code>EXC_CRASH (SIGKILL)</code>. <code>EXC_CRASH (SIGKILL)</code> indicates the operating system terminated the process. See more <a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/understanding_the_exception_types_in_a_crash_report#3582412" target="_blank" rel="noopener">here</a>. </p>
+<p>The crash report also contains a <code>Termination Reason</code> field with a code that explains the reason for the crash. Here, that code is <code>0xdead10cc</code>:</p>
+<ul>
+<li><code>0x8badf00d</code> (pronounced “ate bad food”). The operating system’s watchdog terminated the app. See <a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/identifying_the_cause_of_common_crashes/addressing_watchdog_terminations" target="_blank" rel="noopener">Addressing Watchdog Terminations</a>.</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Exception Type:  EXC_CRASH (SIGKILL)</span><br><span class="line">Exception Codes: 0x0000000000000000, 0x0000000000000000</span><br><span class="line">Exception Note:  EXC_CORPSE_NOTIFY</span><br><span class="line">Termination Reason: Namespace SPRINGBOARD, Code 0x8badf00d</span><br><span class="line">Termination Description: SPRINGBOARD, scene-update watchdog transgression: application&lt;.......&gt;:307 exhausted real (wall clock) time allowance of 10.00 seconds | ProcessVisibility: Background | ProcessState: Running | WatchdogEvent: scene-update | WatchdogVisibility: Background | WatchdogCPUStatistics: ( | &quot;Elapsed total CPU time (seconds): 39.500 (user 39.500, system 0.000), 39% CPU&quot;, | &quot;Elapsed application CPU time (seconds): 21.283, 21% CPU&quot; | )</span><br><span class="line">Triggered by Thread:  0</span><br></pre></td></tr></table></figure>
+<h3 id="WatchDog"><a href="#WatchDog" class="headerlink" title="WatchDog"></a>WatchDog</h3><p>As we know, iOS has watchdog oto ensure application not drag down the system responsiveness. If your app has poor performance, watchdog will check then kill you app to make sure the shared resource well allocated.  It is dev’s duty to maintain system responsiveness. The following table showing some cases for watchdog check, it comes from this <a href="https://developer.apple.com/videos/play/wwdc2011/312/" target="_blank" rel="noopener">session</a>,</p>
+<p><img src="image-20210305194510328.png" alt="image-20210305194510328.png" style="zoom:50%;"></p>
+<p>As for scenarios, Slow launch will cause OS to abort your app. <code>20 sec</code>; resume and suspend is also very important <code>10sec</code>; smooth scrolling <code>6s</code> is also a key point. Besides, I also have seen <code>blocking main thread</code>  will cause watchdog kill an app, like this </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">transgression: application&lt;com.wangya.test2&gt;:21021 exhausted real (wall clock) time allowance of 19.99 seconds </span><br><span class="line">Triggered by Thread:  0</span><br></pre></td></tr></table></figure>
+<p>The <code>Termination Description</code>  in my crash report shows our app <code>exhausted real (wall clock) time allowance of 10.00 seconds</code>.  Besides, the <code>ProcessVisibility</code> shows it is <code>Background</code> and <code>ProcessState</code> is <code>Running</code>.  It seems the crashed happened when it tried to resumed from background. But what caused it? </p>
+<h3 id="Backtrace"><a href="#Backtrace" class="headerlink" title="Backtrace"></a>Backtrace</h3><p>So we have to go to the stack trace in the crashed report. Unfortunately, he gave me a partially symbolicated crash report with <code>CoreData</code> related method remaining hexadecimal memory address. From the frame in our app, i know operations related to <code>CoreData</code> happening in <code>main thread</code>. Then, I have to symbolicate the crash report. </p>
+<h3 id="Symbolicate"><a href="#Symbolicate" class="headerlink" title="Symbolicate"></a>Symbolicate</h3><p>Apple actually has doc to <a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/adding_identifiable_symbol_names_to_a_crash_report#3403794" target="_blank" rel="noopener">symbolicate the Crash Report in Xcode</a>  or <a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/adding_identifiable_symbol_names_to_a_crash_report#3403800" target="_blank" rel="noopener">symbolicate the crash report with the command line</a>. </p>
+<blockquote>
+<p>To symbolicate in Xcode, click the Device Logs button in the <a href="https://help.apple.com/xcode/mac/current/#/dev85c64ec79" target="_blank" rel="noopener">Devices and Simulators window</a>, then drag and drop the crash report file into the list of device logs. And, crash reports must have the <code>.crash</code> file extension. </p>
+</blockquote>
+<p><img src="https://help.apple.com/xcode/mac/current/en.lproj/Art/dw_view_crash_logs.png" alt="img"></p>
+<p> As Apple’s doc, <a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/adding_identifiable_symbol_names_to_a_crash_report#3403795" target="_blank" rel="noopener">Acquire Device Symbol Information</a> says, I have to collect symbols for system frameworks like <code>CoreData</code> from the device where crashed happened.</p>
+<blockquote>
+<p>The symbols for system frameworks are specific to the operating system release and the CPU architecture of the device. For example, the symbols for an iPhone running iOS 13.1.0 aren’t the same as the symbols for the same iPhone running iOS 13.1.2. </p>
+</blockquote>
+<p>Unfortunately, I don’t have  the device on hand to get the symbol information matching the operating system version recorded in the crash report. How to solve it? Well, I still have a way to work around. Let’s start to do that.</p>
+<ol>
+<li><p>Check the os version and hardware model from the crash report. OS Version: <code>iPhone OS 13.3.1 (17D50); Hardware model:</code>Hardware Model:      iPhone11,8`</p>
+</li>
+<li><p>download <a href="https://en.wikipedia.org/wiki/IPSW" target="_blank" rel="noopener">IPSW</a>, iPod Software from  <a href="https://www.theiphonewiki.com/wiki/Firmware/iPhone/11.x" target="_blank" rel="noopener">https://www.theiphonewiki.com/wiki/Firmware/iPhone/11.x</a> or <a href="https://ipsw.me/" target="_blank" rel="noopener">https://ipsw.me/</a>; or can decrypte <code>ipsw</code> by yourself following this <a href="https://gist.github.com/tzmartin/812027b879f6ff4459af" target="_blank" rel="noopener">guide</a></p>
+</li>
+<li><p><code>IPSW</code> file actually is <code>zip</code> file, we can change the file extension <code>ipsw</code> to <code>zip</code>. Then unzip it. You can see a big disk image there.</p>
+<p><img src="image-20210305201936593.png" alt></p>
+<p> Double click it. It will be mounted in filesystem. Then we can see it showing in the <code>Finder</code> </p>
+<p><img src="image-20210305202238201.png" alt></p>
+</li>
+<li><p>Then go to <code>/System/Library/Caches/com.apple.dyld</code> folder. Drag this file to <code>Hopper</code></p>
+<p><img src="image-20210305202347747.png" alt></p>
+</li>
+<li><p>Since all executable dylib are shipped into this whole file, we have to filter out <code>CoreData</code> in the search bar. </p>
+<p><img src="image-20210305202507076.png" alt></p>
+</li>
+<li><p>Get <code>offset</code> from frame in the backtrace in the crash report.  Using <code>go to file offset</code>  in Hopper, <code>option + g</code> to jump to that line of assembly code. I actually have a <a href="https://www.youtube.com/watch?v=GPs3oPFSdo0" target="_blank" rel="noopener">talk</a> about how to use exception info, thread state, offset in backtrace in crash report  to analyze crash report. </p>
+<p><img src="image-20210305204358148.png" alt></p>
+<p>take <code>line 29</code> as an example, it goes to a <code>bl</code> instruction. As we know, in Objective-C, <code>x1</code> stores the sector. So we can quickly figure out the selector is </p>
+<p><a href="https://developer.apple.com/documentation/coredata/nspersistentstorecoordinator/1468872-executerequest?language=objc" target="_blank" rel="noopener">executeRequest:withContext:error:</a></p>
+<p><img src="image-20210305204545965.png" alt></p>
+<p>Hmm, although it is a little bit tedious, we finanly get more info about what is happening here. </p>
+<p>Basically, when resuming from background, our app triggers a data request operation in <code>CoreData</code>. It is executed in <code>main thread</code> and make the main thread wait this transaction finished. While,  it is a bit of slow to execute this SQL-related transaction here and blocks <code>main thread</code> for extended period of time. Then when watchdog come to check, it terminates our app in order to maintain the system responsiveness. </p>
+</li>
+</ol>
+<p><img src="image-20210305210726254.png" alt></p>
+<p>As apple suggests, the watchdog terminates apps that block the main thread for a significant time.  There are some cases of this sort, like </p>
+<ul>
+<li>Synchronous networking</li>
+<li>Processing large amouts of data, such as large JSON files or 3D models</li>
+<li>Triggering lightweight migration for a large <a href="https://developer.apple.com/documentation/coredata" target="_blank" rel="noopener">Core Data</a> store synchronously</li>
+<li>Analysis requests with <a href="https://developer.apple.com/documentation/vision" target="_blank" rel="noopener">Vision</a></li>
+</ul>
+<p>This time, we ate bad food. </p>
+<h3 id="See-More"><a href="#See-More" class="headerlink" title="See More"></a>See More</h3><ul>
+<li><p><a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/identifying_the_cause_of_common_crashes/addressing_watchdog_terminations" target="_blank" rel="noopener">Addressing Watchdog Terminations</a></p>
+</li>
+<li><p><a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/identifying_the_cause_of_common_crashes/investigating_memory_access_crashes" target="_blank" rel="noopener">Investigating Memory Access Crashes</a></p>
+</li>
+<li><p><a href="https://developer.apple.com/documentation/xcode/diagnosing_issues_using_crash_reports_and_device_logs/analyzing_a_crash_report" target="_blank" rel="noopener">Analyzing a Crash Report</a></p>
+</li>
+<li><a href="https://stackoverflow.com/questions/59827727/ios-frequently-getting-exhausted-real-wall-clock-time-allowance-of-10-00-seco" target="_blank" rel="noopener">0x8badf00d in main thread</a></li>
+</ul>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          Author : RY Zheng <br/>
+        
+        Link : <a href="">https://suelan.github.io/2021/03/05/20210305-crash-ate-bad-food/</a><br>
+        License : MIT
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    
+<div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="google, facebook, twitter, weibo, wechat, douban" 
+  
+>
+<span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
+</div>
+<a href="/rss/atom.xml" >
+  <img src="/img/rss.png" alt="Girl in a jacket" width="30" height="30">
+</a>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+
+
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">Buy me a cup of coffee</p>
+  
+  <button id="reward-btn">
+    
+    <span>赞赏 ☕️</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/img/donate.jpeg" alt="Thank you">
+        <p class="qrcode-meta">Thank you</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+          <i class="iconfont icon-06tags"></i>标签: 
+          
+          <span class="span--tag">
+            <a href="/tags/iOS/">
+              #iOS
+            </a>
+          </span>
+          
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        previous:
+        <a href="/2021/02/13/20210213-ensure-null-terminated-string/" target="_self">Ensure Null-Terminated JS Bundle in React Native</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        next:
+        <a href="/2021/03/05/20210305-pointer-authentication-failed/" target="_self">Crash - Pointer Authentication Failures or invalid memory accesses</a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
+      appKey: "W9uovU160HsQkI3hQwlHgBqa",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+      To see a World in a Grain of Sand;And a Heaven in a Wild Flower; Hold Infinity in the palm of your hand; And Eternity in an hour
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2019, 2, 10).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>
