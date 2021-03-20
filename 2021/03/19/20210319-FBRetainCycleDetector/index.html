@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta name="author" content="RY">
+  
+  
+  
+  <title>Understand How MLLeaksFinder and FBRetainCycleDetector automatically detect memory leaks | RY &#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Hexo, theme-bmw">
+  
+
+  <script>
+    console.log('\n%c Hexo-theme-bmw v4.0 ' + '%c 🎉 https://github.com/dongyuanxin/theme-bmw 🎉\n' + '\n%c View demo online ' + '%c 🔍 https://godbmw.com/ 🔍  \n' , 'color: #fadfa3; background: #030307; padding:3px 0;', '', 'color: #fadfa3; background: #030307; padding:3px 0;', '');
+  </script>
+
+  
+
+  
+    <link rel="alternate" href="/rss/atom.xml" title="RY &#39;s Blog" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/img/favicon.ico">
+  
+
+  <link href="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/icon/iconfont.css">
+<link rel="stylesheet" href="/css/github-markdown.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+  <script src="/js/util.js"></script>
+<script src="/js/valine.min.js"></script>
+
+  
+
+  
+    <link href="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js" async></script>
+  
+
+  
+    <link href="https://cdn.bootcss.com/social-share.js/1.0.16/css/share.min.css" rel="stylesheet">
+  
+  
+  <script src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js" async></script>
+  
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.0/dist/av-min.js"></script>
+  
+
+</head>
+
+  <body>
+
+    
+
+    <div id="app">
+
+      <div class="header-wrap">
+  <header>
+    <div class="site-brand">
+      <div class="site-title">
+        <a href="/">RY</a>
+      </div>
+    </div>
+    <nav class="site-navigation">
+      <ul class="nav-menu">
+      
+        <li class="nav-item" data-path="/">
+          
+            <a 
+              href="/"
+              target="_self"
+            >
+              Home
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/archives/">
+          
+            <a 
+              href="/archives/"
+              target="_self"
+            >
+              Popular
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/categories/">
+          
+            <a 
+              href="/categories/"
+              target="_self"
+            >
+              Categories
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="/tags/">
+          
+            <a 
+              href="/tags/"
+              target="_self"
+            >
+              Tags
+            </a>
+          
+        </li>
+      
+        <li class="nav-item" data-path="">
+          
+            <a href="javascript:void(0);" v-else>Me</a>
+            <ul class="nav-menu--dropdown">
+              
+                <li>
+                  <a 
+                    href="https://github.com/sueLan" 
+                    target="_blank"
+                  >
+                    Github
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://stackoverflow.com/users/4026902/ry-zheng" 
+                    target="_blank"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+              
+                <li>
+                  <a 
+                    href="https://www.jianshu.com/u/23bd8d4cc8bf" 
+                    target="_blank"
+                  >
+                    Jian Shu | Chinese
+                  </a>
+                </li>
+              
+            </ul>
+          
+        </li>
+      
+      </ul>
+    </nav>
+    <i class="iconfont icon-menu"></i>
+  </header>
+</div>
+
+<script>
+  let links = document.querySelectorAll('.nav-item');
+  for(let link of links){
+    let childrenLink = link.querySelector('ul');
+    link.addEventListener('mouseenter', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown active";
+      }
+    })
+    link.addEventListener('mouseleave', () => {
+      if(childrenLink) {
+        childrenLink.className = "nav-menu--dropdown";
+      }
+    })
+  }
+  let rootRealPath = getRealPath(window.location.pathname, true);
+  for(let link of links) {
+    let linkPath = link.getAttribute("data-path");
+    if(linkPath && getRealPath(linkPath, true) === rootRealPath) {
+      link.className = "nav-item hover";
+    }
+  }
+
+  let iconMenu = document.querySelector("i.iconfont.icon-menu"),
+    iconMenuClicked = false;
+  let navDOM = document.querySelector("nav.site-navigation");
+  iconMenu.addEventListener("click", () => {
+    iconMenuClicked 
+      ? navDOM.className = "site-navigation active"
+      : navDOM.className = "site-navigation";
+    iconMenuClicked = !iconMenuClicked;
+  })
+</script>
+
+      
+
+
+
+
+
+
+
+
+<div class="container post-index">
+
+  
+
+<div class="post">
+  <h1 class="article-title">
+    <span>Understand How MLLeaksFinder and FBRetainCycleDetector automatically detect memory leaks</span>
+  </h1>
+  <div class="article-top-meta">
+    <span>
+      post ime : 
+      2021-03-19
+    </span>
+    
+    
+      <span>
+        read : <span class="article-timer" data-identity="20210319-FBRetainCycleDetector"></span>
+      </span>
+    
+  </div>
+
+  
+
+  <div class="article-content">
+    <div class="markdown-body">
+      <h2 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h2><p>Memory is important resource in iOS. If a application uses too much memory, exceeding the limit based on the device, the iOS system will kill our App, by sending <code>SIGKILL</code> signal. Besides, minimizing memory usage not only decreases application’s memory footprint, but also reduce the amount of CPU time it consumes. These are mentioned in several WWDC sessions. </p>
+<ul>
+<li><a href="https://developer.apple.com/videos/play/wwdc2011/312/" target="_blank" rel="noopener">WWDC: performance and power optimization</a></li>
+<li><a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/MemoryMgmt.html#//apple_ref/doc/uid/10000011-SW1" target="_blank" rel="noopener">Advanced Memory Management Programming Guide</a></li>
+<li><a href="https://developer.apple.com/videos/play/wwdc2018/219" target="_blank" rel="noopener">https://developer.apple.com/videos/play/wwdc2018/219</a></li>
+<li><a href="https://developer.apple.com/videos/play/wwdc2018/416/" target="_blank" rel="noopener">https://developer.apple.com/videos/play/wwdc2018/416/</a></li>
+<li><p><a href="https://developer.apple.com/videos/play/wwdc2020/10078/?time=256" target="_blank" rel="noopener">https://developer.apple.com/videos/play/wwdc2020/10078/?time=256</a></p>
+<p>Obviously, it is important to keep memory under control. In our daily life, we usually use Xcode memory debugger tool and instruments to detect memory leaks. Basically, lots of manual work. A better to integrate memory leak detection into internal test phase or regression phase. The earlier we detect the issue, the more time we got to fix it. The less efforts we put in checking memory leaks, the more likely we keep our app away from memory leaks. Using <code>MLeaksFinder</code> and <code>FBRetainCycleDetector</code> is a good solution. </p>
+</li>
+</ul>
+<h2 id="What-is-MLeaksFinder-for"><a href="#What-is-MLeaksFinder-for" class="headerlink" title="What is MLeaksFinder for?"></a>What is MLeaksFinder for?</h2><p><code>MLeaksFinder</code> is an light-weight tool from <code>WeChat</code> team, <code>Tencent</code>. It automatically finds leaks in some specific objects. When leaks happening, it will present an alert showing the leaked object and backtrace. </p>
+<h2 id="What-does-MLeaksFinder-do-under-the-hood"><a href="#What-does-MLeaksFinder-do-under-the-hood" class="headerlink" title="What does MLeaksFinder do under the hood?"></a>What does MLeaksFinder do under the hood?</h2><p>The basic idea is to set a timer when the object is about to be released. When the timer is triggered, checked if the reference to the object is still valid. If it is, it turns out this object is leaked. Then, it uses this leaked object as seed object to <code>FBRetainCycleDetector</code> to figure out the retain cycle using. Actually, I found lots of articles introducing <code>MLeakdsFinder</code> are Chinese and outdated. While its source code is a bit easy to read.  </p>
+<p>Basing on this idea, <code>MLeaksFinder</code> has several categories for <a href="https://github.com/Tencent/MLeaksFinder/tree/master/MLeaksFinder" target="_blank" rel="noopener">these classes</a>: </p>
+<ul>
+<li>NSObject+MemoryLeak</li>
+<li>UIApplication+MemoryLeak</li>
+<li>UINavigationController+MemoryLeak</li>
+<li>UIPageViewController+MemoryLeak</li>
+<li>UISplitViewController+MemoryLeak</li>
+<li>UITabBarController+MemoryLeak</li>
+<li>UITouch+MemoryLeak</li>
+<li>UIView+MemoryLeak</li>
+<li>UIViewController+MemoryLeak</li>
+</ul>
+<p>Take <code>UIViewController</code> as an example, it swizzles <code>viewDidDisappear:</code> method, then checks if current view controller have been popped by <code>UINavigationController</code>. Because the view controller isn’t necessarily popped from view controller stack when <code>viewDidDisappear:</code> called. Maybe, another view controller just has been pushed into the view controller stack, cover it and showing on the screen.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)swizzled_viewDidDisappear:(BOOL)animated &#123;</span><br><span class="line">    [self swizzled_viewDidDisappear:animated];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> ([objc_getAssociatedObject(self, kHasBeenPoppedKey) boolValue]) &#123;</span><br><span class="line">        [self willDealloc];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>kHasBeenPoppedKey</code> tag here is set by <a href="https://github.com/Tencent/MLeaksFinder/blob/master/MLeaksFinder/UINavigationController%2BMemoryLeak.m#L56" target="_blank" rel="noopener">UINavigationController, code here</a>. </p>
+<p><img src="image-20210319225704137.png" alt="image-20210319225704137"></p>
+<p>In <code>willDealloc</code> in <code>UIViewController</code>, it will run self.view’s <code>willDealloc</code>; then check <code>subviews</code> Array. Basically, the view tree in this view controller will be traveled through and checked. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">@<span class="function">implementation <span class="title">UIView</span> <span class="params">(MemoryLeak)</span></span></span><br><span class="line">​</span><br><span class="line">- (BOOL)willDealloc &#123;</span><br><span class="line">    <span class="keyword">if</span> (![super willDealloc]) &#123;</span><br><span class="line">        <span class="keyword">return</span> NO;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    [self willReleaseChildren:self.subviews];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> YES;</span><br><span class="line">&#125;</span><br><span class="line">​</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p><img src="image-20210314194009331.png" alt="image-20210314194009331"></p>
+<p>If you enable the <code>FBRetainCycleDetector</code> through macro, the current leaked object will be the seed object for FBRetainCycleDetector, which will detect the retain cycle. </p>
+<h2 id="What-is-FBRetainCycleDetector-for"><a href="#What-is-FBRetainCycleDetector-for" class="headerlink" title="What is FBRetainCycleDetector for?"></a>What is FBRetainCycleDetector for?</h2><p>Facebook has a dedicated article about the <a href="https://engineering.fb.com/2016/04/13/ios/automatic-memory-leak-detection-on-ios/" target="_blank" rel="noopener">FBRetainCycleDetector</a></p>
+<blockquote>
+<p>Finding retain cycles in Objective-C is analogous to finding cycles in a directed acyclic graph in which nodes are objects and edges are references between objects (so if object A retains object B, there exists reference from A to B). Our Objective-C objects are already in our graph; all we have to do is traverse it with a depth-first search.</p>
+</blockquote>
+<p>So, in order to traverse the directed graph, how to get neighbors of each node? How to get objects each node references? For each node in the graph, it could be either an object or block.</p>
+<h2 id="References-in-object"><a href="#References-in-object" class="headerlink" title="References in object"></a>References in object</h2><h3 id="strong-ivars"><a href="#strong-ivars" class="headerlink" title="strong ivars"></a>strong ivars</h3><p>For objects, <code>FBRetainCycleDetector</code> get its <strong>ivar list</strong> from the object. </p>
+<blockquote>
+<p>The first thing we can do is grab the layout of all an object’s instance variables (the “ivar layout”). For a given object, an ivar layout describes where we should look for other objects that it references.</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">const uint8_t *fullLayout = class_getIvarLayout(aCls);</span><br><span class="line"></span><br><span class="line">Ivar *class_copyIvarList(Class cls, unsigned int *outCount)</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/facebook/FBRetainCycleDetector/blob/1ff2adee84a6ee94a1ae82526104a188774eb90a/FBRetainCycleDetector/Layout/Classes/FBClassStrongLayout.mm#L184" target="_blank" rel="noopener"><code>FBClassStrongLayout</code> here</a></p>
+<ol>
+<li>get ivar list for current, its superclass, all the way up to its ancestor</li>
+<li>cache ivar list in a map, <code>&lt;Class, NSArray&lt;FBObjectReference&gt;&gt;</code></li>
+</ol>
+<p>For a class like this</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@interface _RCDTestClassWithMixedWeakAndStrongProperties : NSObject</span><br><span class="line">@property (nonatomic, strong) NSObject *object1;</span><br><span class="line">@property (nonatomic, strong) NSObject *object2;</span><br><span class="line">@property (nonatomic, strong) NSObject *object3;</span><br><span class="line">@property (nonatomic, weak) NSObject *object4;</span><br><span class="line">@property (nonatomic, strong) NSObject *object5;</span><br><span class="line">@property (nonatomic, weak) NSObject *object6;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>There are 4 strong references to others, 4 weak reference. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ivar *ivars = class_copyIvarList(aCls, &amp;count);</span><br></pre></td></tr></table></figure>
+<p><img src="image-20210320160316683.png" width="330" height="600"><br>using </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">const uint8_t *fullLayout = class_getIvarLayout(aCls);</span><br></pre></td></tr></table></figure>
+<p>The full layout is </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;\x03\x11&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> NSIndexSet *<span class="title">FBGetLayoutAsIndexesForDescription</span><span class="params">(NSUInteger minimumIndex, <span class="keyword">const</span> <span class="keyword">uint8_t</span> *layoutDescription)</span> </span>&#123;</span><br><span class="line">  NSMutableIndexSet *interestingIndexes = [NSMutableIndexSet <span class="keyword">new</span>];</span><br><span class="line">  NSUInteger currentIndex = minimumIndex;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (*layoutDescription != <span class="string">'\x00'</span>) &#123;</span><br><span class="line">    <span class="keyword">int</span> upperNibble = (*layoutDescription &amp; <span class="number">0xf0</span>) &gt;&gt; <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">int</span> lowerNibble = *layoutDescription &amp; <span class="number">0xf</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Upper nimble is for skipping</span></span><br><span class="line">    currentIndex += upperNibble;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Lower nimble describes count</span></span><br><span class="line">    [interestingIndexes addIndexesInRange:NSMakeRange(currentIndex, lowerNibble)];</span><br><span class="line">    currentIndex += lowerNibble;</span><br><span class="line"></span><br><span class="line">    ++layoutDescription;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> interestingIndexes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Parsing layout get a index set for strong ivars. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;NSMutableIndexSet: 0x7fb7aea8ef40&gt;[number of indexes: 4 (in 2 ranges), indexes: (1-3 5)]</span><br></pre></td></tr></table></figure>
+<p>Filter out the fourth and sixth ivar.<br><img src="image-20210320160316683.png" width="330" height="600"></p>
+<p>There are other interesting cases in the <code>FBClassStrongLayoutTests.mm</code> , the ivar type could be structure or block, and it could be weak as well. </p>
+<h3 id="References-to-associated-objects"><a href="#References-to-associated-objects" class="headerlink" title="References to associated objects"></a>References to associated objects</h3><p><code>FBRetainCycleDetector</code> hooks the calls, <code>objc_setAssociatedObject</code> and <code>objc_removeAssociatedObjects</code>. Then it store objects and a set of pointers to their associated objects into a global map. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> ObjectAssociationSet = <span class="built_in">std</span>::<span class="built_in">unordered_set</span>&lt;<span class="keyword">void</span> *&gt;;</span><br><span class="line"><span class="keyword">using</span> AssociationMap = <span class="built_in">std</span>::<span class="built_in">unordered_map</span>&lt;id, ObjectAssociationSet *&gt;;</span><br></pre></td></tr></table></figure>
+<h3 id="Block-and-captured-object"><a href="#Block-and-captured-object" class="headerlink" title="Block and captured object"></a>Block and captured object</h3><p>What attracts me most is the capability in FBRetainCycleDetector to detect leaked blocks and its reference.  <a href="https://github.com/facebook/FBRetainCycleDetector/blob/1ff2adee84a6ee94a1ae82526104a188774eb90a/FBRetainCycleDetector/Layout/Blocks/FBBlockStrongLayout.m#L79" target="_blank" rel="noopener">Amazing method to get references from the block</a> and strong reference layout in block.  </p>
+<blockquote>
+<p> What we can use is <a href="http://clang.llvm.org/docs/Block-ABI-Apple.html" target="_blank" rel="noopener">application binary interface for blocks</a> (ABI). It describes how the block will look in memory. If we know that the reference we are dealing with is a block, we can cast it on a fake structure that imitates a block. After casting the block to a C-struct we know where objects retained by the block are kept.</p>
+</blockquote>
+<p><strong>ABI for block</strong></p>
+<p>First of all, let’s take a look at the Block Literal. </p>
+<p>For a block like this</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">^ &#123; <span class="built_in">printf</span>(<span class="string">"hello world\n"</span>); &#125;</span><br></pre></td></tr></table></figure>
+<p>It will be compiled into </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">block_literal_1</span> &#123;</span></span><br><span class="line">    <span class="keyword">void</span> *isa; <span class="comment">// initialized to &amp;_NSConcreteStackBlock or &amp;_NSConcreteGlobalBlock</span></span><br><span class="line">    <span class="keyword">int</span> flags;</span><br><span class="line">    <span class="keyword">int</span> reserved;</span><br><span class="line">    <span class="keyword">void</span> (*invoke)(struct __block_literal_1 *); <span class="comment">// 🌟🌟🌟 The invoke function pointer is set to a function that takes the Block structure as its first argument and the rest of the arguments (if any) to the Block and executes the Block compound statement.</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> __<span class="title">block_descriptor_1</span> *<span class="title">descriptor</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> __block_invoke_1(struct __block_literal_1 *_block) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"hello world\n"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> __<span class="title">block_descriptor_1</span> &#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">int</span> reserved;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">int</span> Block_size; <span class="comment">// the size of the following Block literal structure.</span></span><br><span class="line">&#125; __block_descriptor_1 = &#123; <span class="number">0</span>, <span class="keyword">sizeof</span>(struct __block_literal_1) &#125;</span><br></pre></td></tr></table></figure>
+<p>and </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">block_literal_1</span> _<span class="title">block_literal</span> = &#123;</span></span><br><span class="line">     &amp;_NSConcreteStackBlock,</span><br><span class="line">     (<span class="number">1</span>&lt;&lt;<span class="number">29</span>), &lt;uninitialized&gt;,</span><br><span class="line">     __block_invoke_1,</span><br><span class="line">     &amp;__block_descriptor_1</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>This is the initialization of the block literal structure.  </p>
+<h4 id="What-if-the-block-has-reference-to-others"><a href="#What-if-the-block-has-reference-to-others" class="headerlink" title="What if the block has reference to others?"></a>What if the block has reference to others?</h4><ol>
+<li>Case 1: Variables are imported as <code>const</code> copies.</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int x = 10;</span><br><span class="line">void (^vv)(void) = ^&#123; printf(&quot;x is %d\n&quot;, x); &#125;</span><br><span class="line">x = 11;</span><br><span class="line">vv();</span><br></pre></td></tr></table></figure>
+<p>It will be compiled into </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">block_literal_2</span> &#123;</span></span><br><span class="line">    <span class="keyword">void</span> *isa;</span><br><span class="line">    <span class="keyword">int</span> flags;</span><br><span class="line">    <span class="keyword">int</span> reserved;</span><br><span class="line">    <span class="keyword">void</span> (*invoke)(struct __block_literal_2 *);</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> __<span class="title">block_descriptor_2</span> *<span class="title">descriptor</span>;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span> x; <span class="comment">// const copy variable x </span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> __block_invoke_2(struct __block_literal_2 *_block) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"x is %d\n"</span>, _block-&gt;x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> __<span class="title">block_descriptor_2</span> &#123;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">int</span> reserved;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">int</span> Block_size;</span><br><span class="line">&#125; __block_descriptor_2 = &#123; <span class="number">0</span>, <span class="keyword">sizeof</span>(struct __block_literal_2) &#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> __<span class="title">block_literal_2</span> __<span class="title">block_literal_2</span> = &#123;</span></span><br><span class="line">      &amp;_NSConcreteStackBlock,</span><br><span class="line">      (<span class="number">1</span>&lt;&lt;<span class="number">29</span>), &lt;uninitialized&gt;,</span><br><span class="line">      __block_invoke_2,</span><br><span class="line">      &amp;__block_descriptor_2,</span><br><span class="line">      x</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+<p>We can see the variable <code>x</code> is appended at the end of <code>__block_literal_2</code> structure.  </p>
+<ol start="2">
+<li>Case 2: Variables of <code>__block</code> storage class are imported as a pointer to an enclosing data structure. see <a href="[Imported  copy of  reference](https://clang.llvm.org/docs/Block-ABI-Apple.html#id5">more here</a>)</li>
+</ol>
+<p>From the above cases, we can see in the  descriptor structure <code>__block_descriptor_1</code>,  the <code>Block_size</code> field is sizeof(struct <code>__block_literal_1</code>) . This is a very import field.  <code>FBRetainCycleDetector</code> uses it to get the number of pointers inside</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> (*dispose_helper)(<span class="keyword">void</span> *src) = blockLiteral-&gt;descriptor-&gt;dispose_helper;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">size_t</span> ptrSize = <span class="keyword">sizeof</span>(<span class="keyword">void</span> *);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Figure out the number of pointers it takes to fill out the object, rounding up.</span></span><br><span class="line"><span class="keyword">const</span> <span class="keyword">size_t</span> elements = (blockLiteral-&gt;descriptor-&gt;size + ptrSize - <span class="number">1</span>) / ptrSize;</span><br></pre></td></tr></table></figure>
+<p>Let’s take a look at a test case here. Supposed a block captures an object from out scope.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">NSObject *object = [NSObject <span class="keyword">new</span>];</span><br><span class="line"> </span><br><span class="line"> <span class="keyword">void</span> (^block)() = ^&#123;</span><br><span class="line">   __unused NSObject *someObject = object;</span><br><span class="line"> &#125;;</span><br><span class="line"> </span><br><span class="line"> NSArray *retainedObjects = FBGetBlockStrongReferences((__bridge <span class="keyword">void</span> *)(block));</span><br></pre></td></tr></table></figure>
+<p>The value of <code>blockLiteral-&gt;descriptor-&gt;size</code> is 40, indicating the block 40 bytes in memory; in ARM64 device, the pointer size a <code>8</code> bytes.  So it needs 5 pointers to fill out the fake object. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(lldb) p blockLiteral-&gt;descriptor-&gt;size</span><br><span class="line">(unsigned long) $0 = 40</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> We create an object that pretends to be a block we want to investigate. Because we know the block’s interface, we know where to look for references this block holds. In place of those references our fake object will have “release detectors.” Release detectors are small objects that are observing release messages sent to them. These messages are sent to strong references when an owner wants to relinquish ownership. We can check which detectors received such a message when we deallocate our fake object. Knowing which indexes said detectors are in the fake object, we can find actual objects that are owned by our original block.</p>
+</blockquote>
+<p>Create detector for each of the pointer in the faked object. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Create a fake object of the appropriate length.</span></span><br><span class="line">  <span class="keyword">void</span> *obj[elements];</span><br><span class="line">  <span class="keyword">void</span> *detectors[elements];</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; elements; ++i) &#123;</span><br><span class="line">    FBBlockStrongRelationDetector *detector = [FBBlockStrongRelationDetector <span class="keyword">new</span>];</span><br><span class="line">    obj[i] = detectors[i] = detector;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>Now faked object <code>obj</code> contains 5 references to 5 <code>FBBlockStrongRelationDetector</code> instances.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(void *[]) obj = ([0] = 0x00007fc07b41c370, [1] = 0x00007fc07b41f4b0, [2] = 0x00007fc07b42c080, [3] = 0x00007fc07b422820, [4] = 0x00007fc07b42e420)</span><br></pre></td></tr></table></figure></p>
+<p><img src="image-20210320170900864.png" alt="image-20210320170900864"></p>
+<p>Then, it try to dispose the faked object. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">@autoreleasepool &#123;</span><br><span class="line">   dispose_helper(obj);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>The disposing actually trigger sending <code>release</code> message to <code>FBBlockStrongRelationDetector</code>, in which <code>release</code> message has been overridden and set <code>_strong</code> ivar to <code>YES</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">FBBlockStrongRelationDetector</span><br><span class="line">// set _strong as YES when received release message</span><br><span class="line">- (oneway void)release</span><br><span class="line">&#123;</span><br><span class="line">  _strong = YES;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><img src="image-20210320172426371.png" alt="image-20210320172426371"></p>
+<p>Finally get the index of the strong reference of current block by figuring out in which <code>FBBlockStrongRelationDetector</code>, <code>_strong</code> is <code>YES</code>.  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;NSMutableIndexSet: 0x7fc07b41f560&gt;[number of indexes: 1 (in 1 ranges), indexes: (4)]</span><br></pre></td></tr></table></figure>
+<h3 id="Detect-cycle"><a href="#Detect-cycle" class="headerlink" title="Detect cycle"></a>Detect cycle</h3><p>To detect the cycle of objects, it is doing DFS over graph of objects.<a href="https://github.com/facebook/FBRetainCycleDetector/blob/1ff2adee84a6ee94a1ae82526104a188774eb90a/FBRetainCycleDetector/Detector/FBRetainCycleDetector.mm#L89" target="_blank" rel="noopener"> code here</a>. To find the adjacent objects , FBRetainCycleDetector will combines the ivar list and associated objects. </p>
+<p><img src="image-20201008115603415.png" alt="image-20201008115603415"></p>
+<h2 id="Impact-on-memory-footprint"><a href="#Impact-on-memory-footprint" class="headerlink" title="Impact on memory footprint"></a>Impact on memory footprint</h2><ul>
+<li><strong>MLeaksFinder</strong> is light-weight. It has <strong>few</strong> impact on memory footprint </li>
+<li><strong>FBRetainCycleDetector has impact</strong> on the memory footprint<strong>.</strong> The upside is that <strong>MLeaksFinder</strong> triggers <strong>DFS in FBRetainCycleDetector</strong> on when the user click <code>Retain Cycle</code> button in the alter. After the Alert is dismissed, most of the memory usage will be gone. </li>
+</ul>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary:"></a>Summary:</h2><ul>
+<li><strong>FBRetainCycleDetector</strong> is quite powerful. It can even detect leaks related to Blocks. But it is a bit slow since it uses <code>DFS</code> algorithm to traverse the object tree. Besides, there is potential risks of data race in <a href="https://github.com/facebook/FBRetainCycleDetector/blob/1ff2adee84a6ee94a1ae82526104a188774eb90a/FBRetainCycleDetector/Associations/FBAssociationManager.mm#L136" target="_blank" rel="noopener">associated manager</a>. </li>
+<li><strong>MLeaksFinder</strong> is simple but tricky. So once it detects the leaked object, it use <strong>FBRetainCycleDetector to detect the retain cycle.</strong> Then it shows the <strong>alter.</strong></li>
+<li>We can use <code>MLeaksFinder</code> to detect some seed objects. and provide <strong>FBRetainCycleDetector</strong>  with these candidate objects from which it will start detection.</li>
+</ul>
+
+    </div>
+  </div>
+  
+    <div class="copy-right">
+      <div class="markdown-body">
+        <blockquote>
+        
+        
+          Author : RY Zheng <br/>
+        
+        Link : <a href="">https://suelan.github.io/2021/03/19/20210319-FBRetainCycleDetector/</a><br>
+        License : MIT
+        </blockquote>
+      </div>
+    </div>
+  
+  
+  
+    
+<div class="social-share"
+  style="margin-top: -2rem"
+  data-wechat-qrcode-title="<p>微信扫一扫</p>"
+  data-wechat-qrcode-helper="<p>微信右上角, 扫一扫分享</p>"
+   data-sites="google, facebook, twitter, weibo, wechat, douban" 
+  
+>
+<span style="color: #6b7487; font-size: 1.4rem;">Share To: </span>
+</div>
+<a href="/rss/atom.xml" >
+  <img src="/img/rss.png" alt="Girl in a jacket" width="30" height="30">
+</a>
+<script src="https://cdn.bootcss.com/social-share.js/1.0.16/js/social-share.min.js" async>
+
+
+  
+
+  
+    <div id="reward">
+  
+    <p id="reward-meta">Buy me a cup of coffee</p>
+  
+  <button id="reward-btn">
+    
+    <span>赞赏 ☕️</span>
+  </button>
+  <div id="reward-qrcode">
+    
+      <div class="reward-qrcode--container">
+        <img class="qrcode-img" src="/img/donate.jpeg" alt="Thank you">
+        <p class="qrcode-meta">Thank you</p>
+      </div>
+    
+  </div>
+
+</div>
+
+<script>
+  (() => {
+    let button = document.querySelector('#reward-btn'),
+      qrcode = document.querySelector('#reward-qrcode'),
+      display = false;
+    
+    button.addEventListener('click', () => {
+      qrcode.style.display = display ? 'none' : 'block'
+      display = !display
+    }, false)
+  })()
+</script>
+  
+
+  <div class="article-footer">
+    <div class="article-meta pull-left">
+      <span>
+        
+      </span>
+    </div>
+    <div class="article-meta pull-right">
+    </div>
+  </div>
+</div>
+
+
+  <aside id="sidebar">
+    <p id="sidebar-header"></p>
+    <ol id="sidebar-toc"></ol>
+  </aside>
+  <script async>setTimeout(generateToc, 10);</script>
+
+
+  <nav class="post-navigation">
+    
+      <div class="nav-pre">
+        <i class="iconfont icon-prev"></i>
+        previous:
+        <a href="/2021/03/05/20210305-pointer-authentication-failed/" target="_self">Crash - Pointer Authentication Failures or invalid memory accesses</a>
+      </div>
+    
+    
+      <div class="nav-next">
+        next:
+        <a href="/2021/03/20/React-Native-ExpoKit-Notification/boostnote/" target="_self"></a>
+        <i class="iconfont icon-next"></i>
+      </div>
+    
+  </nav>
+
+  
+    <a href="#comment" class="comment-anchor"></a>
+<div class="comment-title"><i class="iconfont icon-footprint"></i> Comments Here <i class="iconfont icon-footprint"></i></div>
+<div id="vcomments"></div>
+
+<script defer>
+  if( true ) {
+    let path = getRealPath()
+    new Valine({
+      el: "#vcomments",
+      appId: "pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz",
+      appKey: "W9uovU160HsQkI3hQwlHgBqa",
+      notify: false,
+      verify: false,
+      avatar: "robohash",
+      placeholder: "Please fill in the correct email address for my response. ♪(^∇^*)",
+      path
+    });
+  }
+</script>
+   
+
+  
+    <script defer>
+const valineAPI = (() => {
+  try {
+    AV.init("pyVXg5NFiE5JcCDYwumMNjlB-gzGzoHsz", "W9uovU160HsQkI3hQwlHgBqa");
+  } catch(error) {}
+  const isExist = (identity) => {
+    identity = identity || getRealPath();
+    let query = new AV.Query('Timer');
+    return new Promise((resolve, reject) => {
+      query.equalTo("identity", identity);
+      query.find().then(results => {
+        resolve(results.length > 0);
+      }, error => reject(error));
+    })
+  }
+
+  const _get = (identity) => {
+    let query = null;
+    if(identity && identity instanceof Array){
+      let querys = [];
+      for(let i = 0; i < identity.length; ++i) {
+        querys[i] = new AV.Query('Timer');
+        querys[i].equalTo('identity', identity[i]);
+      }
+      query = AV.Query.or.apply(null ,querys);
+    } else {
+      identity = identity || getRealPath();
+      query = new AV.Query("Timer");
+      query.equalTo("identity", identity);
+    }
+
+    return new Promise((resolve, reject) => {
+      query.find()
+      .then(results => resolve(results))
+      .catch(error => reject(error))
+    })
+  }
+
+  const create = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let Todo = AV.Object.extend('Timer');
+      let todo = new Todo();
+      todo.set("times", 1);
+      todo.set("identity", identity);
+      todo.save().then(res => resolve(true), error => reject(error));
+    })
+  }
+
+  const update = (identity) => {
+    identity = identity || getRealPath();
+    return new Promise((resolve, reject) => {
+      let query = new AV.Query('Timer');
+      query.equalTo("identity", identity);
+      query.find().then(todos => {
+        todos.forEach(todo => {
+          todo.set("times", todo.attributes.times + 1);
+        });
+        return AV.Object.saveAll(todos);
+      }).then(todos => resolve(true), error => reject(error));
+    })
+  }
+
+  return {
+    isExist,
+    _get,
+    update,
+    create
+  }
+})()
+
+const calcAndWriteTimes = () => {
+  let isPost = true;
+
+  let timerAllDOM = document.querySelectorAll(".article-timer");
+
+  if(isPost) {
+    let identity = timerAllDOM[0].getAttribute("data-identity");
+    valineAPI.isExist(identity)
+    .then(exist => {
+      if(exist) {
+        return valineAPI.update(identity);
+      }
+      return new Promise(resolve => resolve(true));
+    })
+    .then( succuess => valineAPI._get(identity))
+    .then( result => timerAllDOM[0].innerText = result[0].attributes.times)
+    .catch(error => console.log(error.message))
+    return ;
+  }
+
+  let timerDOMCache = {};
+
+  for(let timerDOM of timerAllDOM) {
+    let identity = timerDOM.getAttribute("data-identity");
+    if(timerDOMCache.hasOwnProperty(identity)){
+      timerDOMCache[identity].dom.push(timerDOM);
+    }else{
+      timerDOMCache[identity] = {
+        dom: [timerDOM],
+        times: undefined
+      };
+    }
+  }
+
+  let identities = Object.keys(timerDOMCache);
+  valineAPI._get(identities).then(results => {
+    for(let result of results) {
+      let {identity, times} = result.attributes;
+      timerDOMCache[identity].times = times;
+      timerDOMCache[identity].dom.map(item => item.innerText = times);
+    }
+    for(let identity of identities) {
+      if(timerDOMCache[identity].times){
+        continue;
+      }
+      timerDOMCache[identity].dom.map(item => item.innerText = 1);
+      valineAPI.create(identity);
+    }
+  }).catch(error => console.log(error.message))
+}
+
+if(true){
+  calcAndWriteTimes();
+}
+</script>
+   
+
+</div>
+
+
+      <footer>
+  <p class="site-info">
+    博客已萌萌哒运行<span id="time-to-now"></span><span class="my-face">(●'◡'●)ﾉ♥</span>
+    <br>
+    Theme - <a href="https://github.com/dongyuanxin/theme-bmw">BMW</a> | Made With 💗 | Powered by <a href="https://godbmw.com/">GodBMW</a>
+    <br>
+    
+      To see a World in a Grain of Sand;And a Heaven in a Wild Flower; Hold Infinity in the palm of your hand; And Eternity in an hour
+    
+  </p>
+</footer>
+
+
+
+<script>
+const timeToNowDOM = document.querySelector("#time-to-now");
+const startTimestamp = new Date(2019, 2, 10).getTime();
+
+const updateTimeStr = () => {
+  let offset = parseInt(
+      (new Date().getTime() - startTimestamp) / 1000,
+      10
+    ),
+    day = Math.floor(offset / 86400),
+    hour = Math.floor((offset % 86400) / 3600),
+    minute = Math.floor(((offset % 86400) % 3600) / 60),
+    second = Math.floor(((offset % 86400) % 3600) % 60);
+  timeToNowDOM.innerHTML =
+    day + "天" + hour + "小时" + minute + "分钟" + second + "秒";
+  setTimeout(updateTimeStr, 500);
+}
+
+setTimeout(updateTimeStr, 500);
+</script>
+
+
+      <div class="back-to-top hidden">
+  <span>
+    <i class="iconfont icon-60"></i><span></span>%
+  </span>
+</div>
+
+<script>
+const updateIconToTop = percent => {
+  let dom = document.querySelector(".back-to-top span span");
+  dom.innerText = percent;
+  if(percent < 1) {
+    document.querySelector(".back-to-top").className = "back-to-top hidden";
+  } else {
+    document.querySelector(".back-to-top").className = "back-to-top";
+  }
+}
+
+const handleScoll = () => {
+  let isRunning = false;
+  return () => {
+    if (isRunning) return;
+    isRunning = true;
+    window.requestAnimationFrame(timestamp => {
+      let scrollTop =
+          document.documentElement.scrollTop || document.body.scrollTop,
+        scrollHeight =
+          document.documentElement.scrollHeight ||
+          document.body.scrollHeight,
+        clientHeight =
+          document.documentElement.clientHeight ||
+          document.body.clientHeight;
+      isRunning = false;
+      if (scrollTop <= 1) {
+        updateIconToTop(0);
+        return;
+      }
+      if (scrollTop + clientHeight >= scrollHeight) {
+        updateIconToTop(100);
+      } else {
+        updateIconToTop(parseInt(
+          100 * scrollTop / (scrollHeight - clientHeight),
+          10
+        ));
+      }
+    });
+  };
+}
+
+const backToTop = () => {
+  let scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop,
+    delay = 10,
+    time = 200;
+  if (scrollTop <= 20) {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    return;
+  }
+  let step = Math.ceil(scrollTop * delay / time);
+  let timer = setInterval(() => {
+    scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    if (scrollTop - step <= 0) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      clearInterval(timer);
+    } else {
+      document.documentElement.scrollTop = scrollTop - step;
+      document.body.scrollTop = scrollTop - step;
+    }
+  }, delay);
+}
+
+document.addEventListener("scroll", handleScoll(), false);
+
+document.querySelector(".back-to-top").addEventListener("click", backToTop, false);
+
+</script>
+
+    </div>
+
+    
+      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+<script>
+  (() => {
+    const mathjaxConfig = {
+      showProcessingMessages: false, //关闭js加载过程信息
+      messageStyle: "none", //不显示信息
+      jax: ["input/TeX", "output/HTML-CSS"],
+      tex2jax: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]], //行内公式选择符
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]], //段内公式选择符
+        skipTags: ["script", "noscript", "style", "textarea", "pre", "code", "a"] //避开某些标签
+      },
+      "HTML-CSS": {
+        availableFonts: ["STIX", "TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+      }
+    }
+
+    let mathjaxInterval = setInterval(() => {
+      if(!window.MathJax){
+        return;
+      }
+      window.MathJax.Hub.Config(mathjaxConfig)
+      window.MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('app')])
+
+      clearInterval(mathjaxInterval)
+    }, 10)    
+  })()
+</script>
+    
+
+    <script src="https://cdn.bootcss.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script>
+<script async>
+  let fancyTimer = setInterval(function(){
+    if(!window.$){
+      return;
+    }
+    $(document).ready(function() {
+      $(".post img").each(function () {
+        if($(this).parent().get(0).tagName.toLowerCase() === "a") {
+          return;
+        }
+        // $(this).attr("data-fancybox", "gallery"); // if you add 'data-fancybox', img will display after showed
+        var element = document.createElement("a");
+        $(element).attr("data-fancybox", "gallery");
+        $(element).attr("href", $(this).attr("src"));
+        $(this).wrap(element);
+      });
+      
+      clearInterval(fancyTimer);
+    });
+  }, 10);
+</script>
+
+    
+  </body>
+
+</html>
