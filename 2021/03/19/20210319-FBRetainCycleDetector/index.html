@@ -273,10 +273,11 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">const uint8_t *fullLayout = class_getIvarLayout(aCls);</span><br><span class="line"></span><br><span class="line">Ivar *class_copyIvarList(Class cls, unsigned int *outCount)</span><br></pre></td></tr></table></figure>
 <p><a href="https://github.com/facebook/FBRetainCycleDetector/blob/1ff2adee84a6ee94a1ae82526104a188774eb90a/FBRetainCycleDetector/Layout/Classes/FBClassStrongLayout.mm#L184" target="_blank" rel="noopener"><code>FBClassStrongLayout</code> here</a></p>
 <ol>
-<li>get ivar list for current, its superclass, all the way up to its ancestor</li>
+<li>Because <code>class_copyIvarList</code> won’t include instance variables declared by superclasses. This method has to get ivar list for current, its superclass, all the way up to its ancestoiicoder</li>
+<li>get strong ivar by analyzing ivar layout</li>
 <li>cache ivar list in a map, <code>&lt;Class, NSArray&lt;FBObjectReference&gt;&gt;</code></li>
 </ol>
-<p>For the following class, there are 4 strong references to others, 2 weak reference.   </p>
+<p>Let’s understand it deeper by taking an example. For the following class, there are 4 strong references to others, 2 weak reference.   </p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@interface _RCDTestClassWithMixedWeakAndStrongProperties : NSObject</span><br><span class="line">@property (nonatomic, strong) NSObject *object1;</span><br><span class="line">@property (nonatomic, strong) NSObject *object2;</span><br><span class="line">@property (nonatomic, strong) NSObject *object3;</span><br><span class="line">@property (nonatomic, weak) NSObject *object4;</span><br><span class="line">@property (nonatomic, strong) NSObject *object5;</span><br><span class="line">@property (nonatomic, weak) NSObject *object6;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
 <p>using  <code>class_copyIvarList</code>, we can see its Ivar list. Each pointer is 8-byte in memory in 64-bit device, we an see the <code>offset</code> for first ivar to the class base address is <code>8 bytes</code>; the second ivar is <code>16 bytes</code>, the third one is <code>24bytes</code>, etc. </p>
 <p><img src="image-20210320160316683.png" width="330" height="600"></p>
