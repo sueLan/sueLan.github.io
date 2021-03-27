@@ -290,10 +290,79 @@
 <li><code>x11</code> claims that there comes 1 non-strong ivar,  weak <code>_object4</code> in above declaration; and then follows 1 strong ivar <code>object5</code></li>
 </ul>
 <p>The following method is to parse ivar layout according to this rule and get a set of <code>NSRange</code> for index and length for strong ivars in this class. One range is <code>1 to 3</code> and the other is <code>5</code>. </p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> NSIndexSet *<span class="title">FBGetLayoutAsIndexesForDescription</span><span class="params">(NSUInteger minimumIndex, <span class="keyword">const</span> <span class="keyword">uint8_t</span> *layoutDescription)</span> </span>&#123;</span><br><span class="line">  NSMutableIndexSet *interestingIndexes = [NSMutableIndexSet <span class="keyword">new</span>];</span><br><span class="line">  NSUInteger currentIndex = minimumIndex;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (*layoutDescription != <span class="string">'\x00'</span>) &#123;</span><br><span class="line">    <span class="keyword">int</span> upperNibble = (*layoutDescription &amp; <span class="number">0xf0</span>) &gt;&gt; <span class="number">4</span>;</span><br><span class="line">    <span class="keyword">int</span> lowerNibble = *layoutDescription &amp; <span class="number">0xf</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Upper nimble is for skipping</span></span><br><span class="line">    currentIndex += upperNibble;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Lower nimble describes count</span></span><br><span class="line">    [interestingIndexes addIndexesInRange:NSMakeRange(currentIndex, lowerNibble)];</span><br><span class="line">    currentIndex += lowerNibble;</span><br><span class="line"></span><br><span class="line">    ++layoutDescription;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> interestingIndexes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>Parsing layout get a index set for strong ivars. </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> NSIndexSet *<span class="title">FBGetLayoutAsIndexesForDescription</span><span class="params">(NSUInteger minimumIndex, <span class="keyword">const</span> <span class="keyword">uint8_t</span> *layoutDescription)</span> </span>&#123;</span><br><span class="line">  NSMutableIndexSet *interestingIndexes = [NSMutableIndexSet <span class="keyword">new</span>];</span><br><span class="line">  NSUInteger currentIndex = minimumIndex;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (*layoutDescription != <span class="string">'\x00'</span>) &#123;</span><br><span class="line">    <span class="comment">// how many non-strong ivar </span></span><br><span class="line">    <span class="keyword">int</span> upperNibble = (*layoutDescription &amp; <span class="number">0xf0</span>) &gt;&gt; <span class="number">4</span>; </span><br><span class="line">    <span class="comment">// how many strong ivar</span></span><br><span class="line">    <span class="keyword">int</span> lowerNibble = *layoutDescription &amp; <span class="number">0xf</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// currentIndex is to track the first idx of strong ivar currently being analyzed from hexodecimal value</span></span><br><span class="line">    <span class="comment">// Upper nimble is for skipping `non-strong` ivar</span></span><br><span class="line">    currentIndex += upperNibble;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Lower nimble describes count of the strong ivar </span></span><br><span class="line">    [interestingIndexes addIndexesInRange:NSMakeRange(currentIndex, lowerNibble)];</span><br><span class="line">    currentIndex += lowerNibble;</span><br><span class="line"></span><br><span class="line">    ++layoutDescription;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> interestingIndexes;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>Idx</th>
+<th>Weak/strong</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>strong</td>
+<td>object1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>strong</td>
+<td>object2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>strong</td>
+<td>object3</td>
+</tr>
+<tr>
+<td>4</td>
+<td>weak</td>
+<td>object4</td>
+</tr>
+<tr>
+<td>5</td>
+<td>strong</td>
+<td>object5</td>
+</tr>
+<tr>
+<td>6</td>
+<td>weak</td>
+<td>object6</td>
+</tr>
+</tbody>
+</table>
+<p>For the above case, the ivar layout is <code>&quot;\x03\x11&quot;</code></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>upperNibble</th>
+<th>lowerNibble</th>
+<th>currentIndex</th>
+<th>NSRange</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x03</td>
+<td>0</td>
+<td>3</td>
+<td>1</td>
+<td>{1, 3}</td>
+</tr>
+<tr>
+<td>x11</td>
+<td>1</td>
+<td>1</td>
+<td>5</td>
+<td>{5, 1}</td>
+</tr>
+</tbody>
+</table>
+<p>Parsing ivar layout to filter out the 4th and 6th ivar and get a set of index range for strong ivar. The result is two range, {1, 3} and {5, 1} </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;NSMutableIndexSet: 0x7fb7aea8ef40&gt;[number of indexes: 4 (in 2 ranges), indexes: (1-3 5)]</span><br></pre></td></tr></table></figure>
-<p>Filter out the fourth and sixth ivar.<br><img src="image-20210320161003483.png" width="330" height="600"></p>
+<p><img src="image-20210320161003483.png" width="375" height="500"></p>
 <p>There are other interesting cases in the <a href="https://github.com/facebook/FBRetainCycleDetector/blob/master/FBRetainCycleDetectorTests/FBClassStrongLayoutTests.mm" target="_blank" rel="noopener">FBClassStrongLayoutTests.mm</a>, the ivar type could be structure or block, and it could be weak as well. </p>
 <h3 id="References-to-associated-objects"><a href="#References-to-associated-objects" class="headerlink" title="References to associated objects"></a>References to associated objects</h3><p><code>FBRetainCycleDetector</code> hooks the calls, <code>objc_setAssociatedObject</code> and <code>objc_removeAssociatedObjects</code>. Then it store objects and a set of pointers to their associated objects into a global map. </p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> ObjectAssociationSet = <span class="built_in">std</span>::<span class="built_in">unordered_set</span>&lt;<span class="keyword">void</span> *&gt;;</span><br><span class="line"><span class="keyword">using</span> AssociationMap = <span class="built_in">std</span>::<span class="built_in">unordered_map</span>&lt;id, ObjectAssociationSet *&gt;;</span><br></pre></td></tr></table></figure>
@@ -321,12 +390,19 @@
 <ol start="2">
 <li>Case 2: Variables of <code>__block</code> storage class are imported as a pointer to an enclosing data structure. see <a href="[Imported  copy of  reference](https://clang.llvm.org/docs/Block-ABI-Apple.html#id5">more here</a>)</li>
 </ol>
-<p>From the above cases, we can see in the  descriptor structure <code>__block_descriptor_1</code>,  the <code>Block_size</code> field is sizeof(struct <code>__block_literal_1</code>) . This is a very import field.  <code>FBRetainCycleDetector</code> uses it to get the number of pointers inside</p>
+<p>From the above cases, we can see in the  descriptor structure <code>__block_descriptor_2</code>,  the <code>Block_size</code> field is sizeof(struct <code>__block_literal_2</code>) . This is a very import field.  <code>FBRetainCycleDetector</code> uses it to get the number of pointers inside</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> (*dispose_helper)(<span class="keyword">void</span> *src) = blockLiteral-&gt;descriptor-&gt;dispose_helper;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">size_t</span> ptrSize = <span class="keyword">sizeof</span>(<span class="keyword">void</span> *);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Figure out the number of pointers it takes to fill out the object, rounding up.</span></span><br><span class="line"><span class="keyword">const</span> <span class="keyword">size_t</span> elements = (blockLiteral-&gt;descriptor-&gt;size + ptrSize - <span class="number">1</span>) / ptrSize;</span><br></pre></td></tr></table></figure>
-<p>Let’s take a look at a test case here. Supposed a block captures an object from out scope.</p>
+<p>Let’s take a look at a test case here. Supposed a block captures an object from outside.</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">NSObject *object = [NSObject <span class="keyword">new</span>];</span><br><span class="line"> </span><br><span class="line"> <span class="keyword">void</span> (^block)() = ^&#123;</span><br><span class="line">   __unused NSObject *someObject = object;</span><br><span class="line"> &#125;;</span><br><span class="line"> </span><br><span class="line"> NSArray *retainedObjects = FBGetBlockStrongReferences((__bridge <span class="keyword">void</span> *)(block));</span><br></pre></td></tr></table></figure>
-<p>The value of <code>blockLiteral-&gt;descriptor-&gt;size</code> is 40, indicating the block 40 bytes in memory; in ARM64 device, the pointer size a <code>8</code> bytes.  So it needs 5 pointers to fill out the fake object. </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(lldb) p blockLiteral-&gt;descriptor-&gt;size</span><br><span class="line">(unsigned long) $0 = 40</span><br></pre></td></tr></table></figure>
+<p>The block literal is like this</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">struct BlockLiteral &#123;</span><br><span class="line">  void *isa;  // initialized to &amp;_NSConcreteStackBlock or &amp;_NSConcreteGlobalBlock</span><br><span class="line">  int flags;</span><br><span class="line">  int reserved;</span><br><span class="line">  void (*invoke)(void *, ...);</span><br><span class="line">  struct BlockDescriptor *descriptor;</span><br><span class="line">  // imported variables</span><br><span class="line">  const void *someObject </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><img src="block_literal_x.png" alt><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(lldb) p blockLiteral-&gt;descriptor-&gt;size</span><br><span class="line">(unsigned long) $0 = 40</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>The value of <code>blockLiteral-&gt;descriptor-&gt;size</code> is 40, indicating the block 40 bytes in memory;</li>
+<li><code>int</code> is 32 bit, <code>flags</code> and <code>reserved</code> will be put together into one word, 8 bytes in 64bit processor device. </li>
+<li>In ARM64 device, the pointer size a <code>8</code> bytes.  </li>
+<li>So it needs 5 pointers to fill out the fake object. </li>
+</ul>
 <blockquote>
 <p> We create an object that pretends to be a block we want to investigate. Because we know the block’s interface, we know where to look for references this block holds. In place of those references our fake object will have “release detectors.” Release detectors are small objects that are observing release messages sent to them. These messages are sent to strong references when an owner wants to relinquish ownership. We can check which detectors received such a message when we deallocate our fake object. Knowing which indexes said detectors are in the fake object, we can find actual objects that are owned by our original block.</p>
 </blockquote>
