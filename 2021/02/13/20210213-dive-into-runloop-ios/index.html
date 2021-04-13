@@ -240,13 +240,13 @@
 <h2 id="What-is-RunLoop-in-iOS"><a href="#What-is-RunLoop-in-iOS" class="headerlink" title="What is RunLoop in iOS?"></a>What is RunLoop in iOS?</h2><p>Before talking about RunLoop in iOS, we may have to know something about event loop and thread.  In <a href="https://en.wikipedia.org/wiki/OS/360_and_successors#MVT" target="_blank" rel="noopener">OS/360 Multiprogramming with a Variable Number of Tasks</a> (MVT) in 1967, threads made an early appearance under the name of “tasks”. A <strong>thread</strong> in computer science  is short for a <em>thread of execution</em>. Once the tasks in one Thread is all done, the thread finishes its job and exits. Sometimes, we need a way to keep it alive and handling events.  Then,  comes the event loop. The psudo code for event loop is like this:</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">loop</span></span></span><br><span class="line"><span class="function">    <span class="title">initialize</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    <span class="title">while</span> <span class="title">message</span> != <span class="title">quit</span></span></span><br><span class="line"><span class="function">        <span class="title">message</span> := <span class="title">get_next_message</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">        <span class="title">process_message</span>(<span class="params">message</span>)</span></span><br><span class="line"><span class="function">    <span class="title">end</span> <span class="title">while</span></span></span><br><span class="line"><span class="function"><span class="title">end</span> <span class="title">function</span></span></span><br></pre></td></tr></table></figure>
 <p>In Wikipedia, event loop is a programming construct or <a href="https://en.wikipedia.org/wiki/Software_design_pattern" target="_blank" rel="noopener">design pattern</a> that waits for and dispatches <a href="https://en.wikipedia.org/wiki/Event-driven_programming" target="_blank" rel="noopener">events</a> or <a href="https://en.wikipedia.org/wiki/Message_Passing_Interface" target="_blank" rel="noopener">messages</a> in a <a href="https://en.wikipedia.org/wiki/Computer_program" target="_blank" rel="noopener">program</a>.  In this event loop, it keeps <code>waiting events -&gt; receive events -&gt; handle events</code> until the exit condition is met. </p>
-<p>In Apple’s doc,  this kind of event loop is implemented by <code>CFRunLoop</code> in low-level. In cocoa, the object is an instance of <code>NSRunLoop</code> There is exactly one run loop per thread. </p>
 <blockquote>
 <p>Run loops are part of the fundamental infrastructure associated with threads. A <em>run loop</em> is an event processing loop that you use to schedule work and coordinate the receipt of incoming events. The purpose of a run loop is to keep your thread busy when there is work to do and put your thread to sleep when there is none.</p>
 </blockquote>
 <blockquote>
 <p>A CFRunLoop object monitors sources of input to a task and dispatches control when they become ready for processing.  </p>
 </blockquote>
+<p>A run loop receives events from two different types of sources. <code>Input sources</code> deliver asynchronous events, usually messages from another thread or from a different application. <code>Timer sources</code> deliver synchronous events, occurring at a scheduled time or repeating interval.  </p>
 <p>It can handle </p>
 <ul>
 <li><p>user input devices</p>
@@ -261,6 +261,7 @@
 <p><img src="image-20210128230441389.png" alt="image-20210128230441389"></p>
 </li>
 </ul>
+<p>In Apple’s doc,  this kind of event loop is implemented by <code>CFRunLoop</code> in low-level. In cocoa, the object is an instance of <code>NSRunLoop</code> There is exactly one run loop per thread. </p>
 <p>Apple provides two APIs to get runloop object </p>
 <ul>
 <li><code>CFRunLoopGetMain()</code> // the main CFRunLoop object</li>
